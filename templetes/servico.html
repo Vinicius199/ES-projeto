@@ -1,0 +1,75 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Serviços</title>
+    <link rel="stylesheet" href="{% static 'css/servico.css' %}" />
+  </head>
+  <body>
+    <header>
+      <h1>Escolha um Serviço</h1>
+    </header>
+
+    <div class="container">
+      <!-- Serviço A -->
+      <div class="service-box">
+        <h3>Serviço A</h3>
+        <p>
+          Descrição do Serviço A. Este serviço oferece uma solução rápida e
+          eficiente para suas necessidades.
+        </p>
+        <button class="button" onclick="openModal('Serviço A')">
+          Agendar Agora
+        </button>
+      </div>
+
+      <!-- Serviço B -->
+      <div class="service-box">
+        <h3>Serviço B</h3>
+        <p>
+          Descrição do Serviço B. Obtenha resultados excelentes e uma
+          experiência personalizada com este serviço.
+        </p>
+        <button class="button" onclick="openModal('Serviço B')">
+          Agendar Agora
+        </button>
+      </div>
+
+      <!-- Serviço C -->
+      <div class="service-box">
+        <h3>Serviço C</h3>
+        <p>
+          Descrição do Serviço C. Um serviço de alta qualidade para atender às
+          suas necessidades específicas.
+        </p>
+        <button class="button" onclick="openModal('Serviço C')">
+          Agendar Agora
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal de agendamento -->
+    <div id="myModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div class="modal-header">
+          <h2>Agendar - <span id="serviceName"></span></h2>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="name" placeholder="Seu nome" required />
+          <input type="email" id="email" placeholder="Seu e-mail" required />
+          <input type="datetime-local" id="datetime" required />
+        </div>
+        <div class="modal-footer">
+          <button class="button" onclick="submitForm()">
+            Confirmar Agendamento
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="{% static 'js/servico.js' %}"></script>
+  </body>
+</html>

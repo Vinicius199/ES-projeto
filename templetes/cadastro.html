@@ -1,0 +1,41 @@
+{% extends 'base.html' %} {% block title %}Início - Meu Site{% endblock %}
+{%block content %}
+<section class="home">
+  {% block 'dashboard'%}
+  <main class="cadastro-container">
+    <div class="cadastro-card">
+      <h2>Criar conta</h2>
+      <p class="subtitle">Preencha os dados abaixo para se cadastrar.</p>
+
+      <form id="cadastroForm" method="POST" action="{% url 'cadastro' %}">
+        {% csrf_token %}
+        <label for="nome">Nome</label>
+        {{form.nome}}
+        
+        <label for="sobrenome">Sobrenome</label>
+        {{form.sobrenome}}
+
+        <label for="telefone">Telefone</label>
+        {{form.telefone}}
+
+        <label for="email">E-mail</label>
+        {{form.email}}
+
+        <label for="senha">Senha</label>
+        {{form.senha}}
+
+        <button type="submit" class="btn-cadastro">Cadastrar</button>
+
+        <p class="extra-links">
+          Já tem conta? <a href="{% url 'login' %}" class="btn">Entrar</a>
+        </p>
+      </form>
+    </div>
+  </main>
+
+  <script src="templetes/static/js/script.js"></script>
+  
+
+  {% endblock %}
+</section>
+{% endblock %}
