@@ -30,6 +30,9 @@ INSTALLED_APPS = [
     'corsheaders',
 ]
 
+AUTH_USER_MODEL = 'clientes.Cliente' 
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
