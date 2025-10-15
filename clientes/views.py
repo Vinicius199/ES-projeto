@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect
 from .forms import CadastroForm, LoginForm 
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import login as django_login
+from django.contrib.auth import login as django_login, authenticate, logout as django_logout
+from django.contrib import messages
 import json
 from .models import Cliente
 from . import views
@@ -12,50 +13,57 @@ def home(request):
     return render(request, 'home.html')
     
 def login(request):
-    #return render(request, 'login.html')
-    if request.method == 'GET':
-        return render(request, 'login.html')
-    elif request.method == 'POST':
+    if request.user.is_authenticated:
+        return redirect('home') # Redireciona se já estiver logado
+
+    if request.method == 'POST':
         email = request.POST.get('email')
         senha = request.POST.get('senha')
 
-    login = Cliente.objects.filter(email=email, senha=senha)
-    if login.exists():
-        return render(request, 'home.html')
-    else:
-        return render(request, 'login.html', {'email': email})
-
-def login_api(request):
-    if request.method == 'POST':
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            email = form.cleaned_data['email']
-            senha = form.cleaned_data['senha']
-            cliente = Cliente.objects.filter(email=email).first()
-            if cliente and cliente.check_password(senha):  # Verifica a senha
-                django_login(request, cliente)  # Cria a sessão de login
-                return JsonResponse({'success': True, 'message': 'Login realizado com sucesso!'})
-            else:
-                return JsonResponse({'success': False, 'message': 'Email ou senha incorretos.'})
+        # O authenticate() lida com a verificação da senha hasheada!
+        user = authenticate(request, username=email, password=senha)
+        
+        if user is not None:
+            # 2. Sucesso: Loga o usuário
+            django_login(request, user) 
+            
+            # Use o parâmetro 'next' para redirecionar para a página anterior, se houver.
+            next_url = request.POST.get('next') or request.GET.get('next', 'home')
+            return redirect(next_url)
         else:
-            errors = form.errors.get_json_data()
-            return JsonResponse({'success': False, 'errors': errors})
+            # 3. Falha: Credenciais inválidas
+            messages.error(request, "E-mail ou senha inválidos. Tente novamente.")
+            
+            # Retorna o formulário com o campo 'email' preenchido para conveniência
+            return render(request, 'login.html', {'email_digitado': email})
+    
+    # GET request
+    return render(request, 'login.html')
+
 
 @csrf_exempt
-def cadastro_api(request):
+def cadastro(request): 
     if request.method == 'POST':
         form = CadastroForm(request.POST)
+        
         if form.is_valid():
-            form.save()
-            print("Cadastro realizado com sucesso!")
-            return JsonResponse({'message': 'Cadastro realizado com sucesso!', 'redirect_url': '/login/'}, status=201)
+            form.save() # O save() já faz o hashing
+            messages.success(request, "Cadastro realizado com sucesso! \nFaça seu login.")
+            return redirect('login') 
+            
         else:
-            print("Erro no formulário:", form.errors)
-            return render(request, 'cadastro.html', {'form': form, 'errors': 'formulario invalido'})
+            # Erro de validação: retorna o formulário com os erros anexados.
+            messages.error(request, "Houve erros na validação. Verifique os campos.")
+            return render(request, 'cadastro.html', {'form': form})
+            
     else:
         form = CadastroForm()
         return render(request, 'cadastro.html', {'form': form})
     
 def service(request):
-    return render(request, 'servicoteteste.html')
+    return render(request, 'servico.html')
+
+def logout(request):
+    django_logout(request)
+    return redirect('home')
     
