@@ -24,14 +24,14 @@ def login(request):
         user = authenticate(request, username=email, password=senha)
         
         if user is not None:
-            # 2. Sucesso: Loga o usuário
+            # Loga o usuário
             django_login(request, user) 
             
             # Use o parâmetro 'next' para redirecionar para a página anterior, se houver.
             next_url = request.POST.get('next') or request.GET.get('next', 'home')
             return redirect(next_url)
         else:
-            # 3. Falha: Credenciais inválidas
+            # Credenciais inválidas
             messages.error(request, "E-mail ou senha inválidos. Tente novamente.")
             
             # Retorna o formulário com o campo 'email' preenchido para conveniência

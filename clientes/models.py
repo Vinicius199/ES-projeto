@@ -1,7 +1,6 @@
-# clientes/models.py (CORRIGIDO)
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from django.contrib.auth.hashers import make_password # Não precisa mais disso no save()
+from django.contrib.auth.hashers import make_password 
 
 # Um Manager para criar usuários e superusuários
 class ClienteManager(BaseUserManager):
