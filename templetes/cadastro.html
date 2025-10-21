@@ -1,0 +1,68 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% block title %}Cadastro - Meu Site{% endblock %} 
+
+{% block dashboard %} 
+
+<div class="cadastro-container">
+    <div class="cadastro-card">
+        <h2>Criar conta</h2>
+        <p class="subtitle">Preencha os dados abaixo para se cadastrar.</p>
+
+        {# EXIBIÇÃO DE MENSAGENS GERAIS #}
+        {% if messages %} 
+            {% for message in messages %}
+                <div class="message-{{ message.tags }}">{{ message }}</div>
+            {% endfor %} 
+        {% endif %} 
+        
+        <form method="POST" action="{% url 'cadastro' %}">
+            {% csrf_token %} 
+            
+            {# ERROS GERAIS (non_field_errors) #}
+            {% if form.non_field_errors %}
+                <div class="error-message">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %} 
+
+            {# CAMPOS DO FORMULÁRIO #}
+            <label for="{{ form.nome.id_for_label }}">Nome</label>{{ form.nome }} 
+            {% for error in form.nome.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+
+            <label for="{{ form.sobrenome.id_for_label }}">Sobrenome</label>{{ form.sobrenome }} 
+            {% for error in form.sobrenome.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+
+            <label for="{{ form.telefone.id_for_label }}">Telefone</label>{{ form.telefone }} 
+            {% for error in form.telefone.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+
+            <label for="{{ form.email.id_for_label }}">E-mail</label>{{ form.email }} 
+            {% for error in form.email.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+
+            <label for="{{ form.senha.id_for_label }}">Senha</label>{{ form.senha }}
+            {% for error in form.senha.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+
+            <button type="submit" class="btn-cadastro">Cadastrar</button>
+
+            <p class="extra-links">
+                Já tem conta? <a href="{% url 'login' %}" class="btn">Entrar</a>
+            </p>
+        </form>
+    </div>
+</div>
+
+<script src="{% static 'js/main.js' %}"></script>
+
+{% endblock dashboard %}

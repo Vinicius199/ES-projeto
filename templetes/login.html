@@ -1,0 +1,61 @@
+{% extends 'baselogin.html' %}
+
+{% block title %}Início - Meu Site{% endblock %}
+
+{% block content %}
+  <section class="home">
+    {% block 'dashboard'%}
+      <!-- CSS principal e CSS da página de login -->
+      <link rel="stylesheet" href="templetes/static/css/style.css">
+    
+      <!-- ======= CONTEÚDO PRINCIPAL ======= -->
+      <main class="login-container">
+        <div class="login-card">
+          <h2>Entrar no sistema</h2>
+          <p class="subtitle">Acesse sua conta com e-mail e senha.</p>
+        
+          {% if messages %}
+            {% for message in messages %}
+                <div class="message-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+          {% endif %}
+
+          <form method="post"> 
+            {% csrf_token %}
+            {% if request.GET.next %}
+                <input type="hidden" name="next" value="{{ request.GET.next }}">
+            {% endif %}
+
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" 
+                   placeholder="seu@exemplo.com" required 
+                   value="{{ email_digitado|default_if_none:'' }}">
+
+            <label for="senha">Senha</label>
+            <input type="password" id="senha" name="senha" placeholder="••••••••" required>
+
+            <button type="submit" class="btn-login">Entrar</button>
+
+            <p class="extra-links"> 
+                <a href="{% url 'cadastro' %}" class="btn">Criar conta</a>
+            </p>
+        </form>
+        
+        </div>
+      </main>
+
+
+
+
+
+      <script src="templetes/static/js/main.js"></script>
+      <script>
+      </script>
+    </body>
+    </html>
+
+    {% endblock %}
+  </section>
+{% endblock %}
