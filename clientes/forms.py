@@ -38,7 +38,7 @@ class CadastroForm(forms.ModelForm):
              raise ValidationError("O DDD deve ser válido (exemplo: 11 para São Paulo).")
         return telefone
 
-    # **PASSO CRÍTICO 4: Sobrescrever save() para HASHING**
+    # Sobrescrever save() para HASHING**
     def save(self, commit=True):
         user = super().save(commit=False)
         senha_plana = self.cleaned_data["senha"]
@@ -47,9 +47,7 @@ class CadastroForm(forms.ModelForm):
             user.save()
         return user
 # ---------------------------------------------
-
-
-    
+   
 class LoginForm(forms.Form):
     email = forms.EmailField(label='Email', max_length=100)
     senha = forms.CharField(label='Senha', widget=forms.PasswordInput, max_length=50)

@@ -1,0 +1,50 @@
+{% extends 'base.html' %} 
+
+{% block title %}Área do Cliente - Meu Site{% endblock title %}
+
+{% block content %}
+
+<section>
+    {% block dashboard %}
+    
+    <div>
+        <h1>Área do Cliente</h1>
+        
+        <div class="box-cliente">
+        <div>
+            
+            {% if user.is_authenticated %}
+                
+                <p>
+                    <strong>Nome:</strong> 
+                    {{ user.get_full_name|default:user.email }}
+                </p>
+                
+                <p><br>
+                    <strong>Email:</strong> 
+                    {{ user.email|default:"Email não informado" }}
+                </p>
+                
+                <p><br>
+                    <strong>Telefone:</strong> 
+                    {{ user.telefone|default:"(XX) XXXXX-XXXX" }}
+                </p>
+
+            {% else %}
+                <p>Usuário não autenticado. Por favor, <a href="{% url 'login' %}">faça o login</a>.</p>
+            {% endif %}
+        </div>
+
+        {% if user.is_authenticated %}
+        <div><br>
+            <button type="submit" class="btn-cadastro">Editar Dados</button>
+            <button type="submit" class="btn-excluir">Excluir Conta</button>
+        </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% endblock dashboard %}
+</section>
+
+{% endblock content %}

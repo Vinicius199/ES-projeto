@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Horario {% endblock %}
+
+{% block dashboard %}
+
+<div class="container">
+    <h1>Meus Horários Agendados</h1>
+
+    {% if agendamentos %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Data e Hora</th>
+                <th scope="col">Serviço/Profissional</th>
+                <th scope="col">Status</th>
+                <th scope="col">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for agendamento in agendamentos %}
+            <tr>
+                <td>{{ agendamento.data_hora|date:"d/m/Y H:i" }}</td>
+                <td>{{ agendamento.servico }} com {{ agendamento.profissional }}</td>
+                <td>
+                    {% if agendamento.confirmado %}
+                        <span class="badge bg-success">Confirmado</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Pendente</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not agendamento.confirmado %}
+                    {# Botão Cancelar com um formulário POST para segurança e envio do ID #}
+                    <form method="post" action="{% url 'cancelar_agendamento' agendamento.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm"
+                                onclick="return confirm('Tem certeza que deseja cancelar este agendamento?');">
+                            Cancelar
+                        </button>
+                    </form>
+                    {% else %}
+                    <button class="btn btn-secondary btn-sm" disabled>Agendamento Confirmado</button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        Você não possui horários agendados no momento.
+    </div>
+    {% endif %}
+
+    <p><a href="{% url 'service' %}" class="btn btn-primary">Agendar Novo Horário</a></p>
+</div>
+{% endblock %}
