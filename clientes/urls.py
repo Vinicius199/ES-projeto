@@ -8,6 +8,9 @@ urlpatterns = [
     path('cadastro/', views.cadastro, name='cadastro'),
     path('service/', views.service, name='service'),
     path('sair/', views.logout, name='logout_view'),
+    path('agenda/', views.agenda, name='agenda'),
+    path('cliente/', views.cliente, name='cliente')
+    #
     #path("google_login/", views.google_login, name="google_login"),
     #path("oauth2callback/", views.oauth2callback, name="oauth2callback"),
     #path("calendar/", views.calendar_events, name="calendar_events"),

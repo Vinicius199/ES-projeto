@@ -1,17 +1,20 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from django.contrib.auth.hashers import make_password 
+from django.contrib.auth.hashers import make_password # Não precisa mais disso no save()
 
 # Um Manager para criar usuários e superusuários
 class ClienteManager(BaseUserManager):
+
     def create_user(self, email, senha=None, **extra_fields):
         if not email:
             raise ValueError('O e-mail deve ser fornecido')
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(senha) # Usa o método set_password
+        # Salva o objeto Cliente no banco de dados (retorna o objeto pronto
         user.save(using=self._db)
         return user
+    
 
     def create_superuser(self, email, senha=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
@@ -29,11 +32,13 @@ class Cliente(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     
-    objects = ClienteManager()
+    objects = ClienteManager() 
 
     # Campos de autenticação
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['nome', 'sobrenome'] # Campos que serão pedidos ao criar superusuário
+
+    
 
     def get_full_name(self):
         return f"{self.nome} {self.sobrenome}"
@@ -43,3 +48,6 @@ class Cliente(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self)-> str:
         return f"{self.nome} {self.sobrenome} - {self.email}"
+    
+class Horario(models.Model):
+    pass
