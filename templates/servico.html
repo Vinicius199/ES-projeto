@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Serviços{% endblock %}
+
+{% block dashboard %}
+
+<body>
+    <header>
+        <h1>Escolha um Serviço</h1>
+    </header>
+
+    <div class="container">
+        {% for servico in servicos %}
+            <div class="service-box">
+                <h3>{{ servico.nome }}
+                <br>
+                (Duração: {{ servico.duracao_minutos }} min)</h3>
+                <br>
+                <p>{{ servico.descricao }}</p><br>
+                
+                {% if user.is_authenticated %}
+                    <button class="button" onclick="openModal('{{ servico.nome }}', '{{ servico.id }}')">
+                        Agendar Agora
+                    </button>
+                {% else %}
+                    <a href="{% url 'login' %}" class="button" style="text-decoration: none; display: inline-block;">
+                        Agendar (Faça Login)
+                    </a>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p>Nenhum serviço cadastrado.</p>
+        {% endfor %}
+    </div>
+
+    {% if user.is_authenticated %}
+        <div id="myModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <div class="modal-header">
+                    <h2>Agendar Serviço</h2>
+                </div>
+                
+                <div class="modal-body">
+                    
+                    
+                    <label for="modalProfissionalSelect">Selecione o Profissional:</label>
+                    <select id="modalProfissionalSelect" name="profissional_id" required>
+                        <option value="" disabled selected>Selecione um Profissional</option> 
+                    </select>
+
+                    <br><br>
+                    
+                    <label for="datetime">Data e Hora:</label>
+                    <input type="datetime-local" id="datetime" required />
+                </div>
+
+                <div class="modal-footer">
+                    <button class="button" onclick="submitForm()">
+                        Confirmar Agendamento
+                    </button>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <form method="post" id="agendamentoForm" action="{% url 'service' %}" style="display:none;">
+        {% csrf_token %}
+        <input type="hidden" id="form_servico_id" name="servico_id">
+        <input type="hidden" id="form_data_hora" name="data_hora">
+        <input type="hidden" id="form_profissional_id" name="profissional_id">
+    </form>
+    </body>
+{% endblock %}

@@ -38,7 +38,7 @@ class CadastroForm(forms.ModelForm):
              raise ValidationError("O DDD deve ser válido (exemplo: 11 para São Paulo).")
         return telefone
 
-    # **PASSO CRÍTICO 4: Sobrescrever save() para HASHING**
+    # Sobrescrever save() para HASHING**
     def save(self, commit=True):
         user = super().save(commit=False)
         senha_plana = self.cleaned_data["senha"]
@@ -47,9 +47,7 @@ class CadastroForm(forms.ModelForm):
             user.save()
         return user
 # ---------------------------------------------
-
-
-    
+   
 class LoginForm(forms.Form):
     email = forms.EmailField(label='Email', max_length=100)
     senha = forms.CharField(label='Senha', widget=forms.PasswordInput, max_length=50)
@@ -64,3 +62,18 @@ class LoginForm(forms.Form):
             if user and not user.check_password(senha):
                 raise ValidationError("Email ou senha incorretos.")
         return cleaned_data
+    
+class ClienteUpdateForm(forms.ModelForm):
+    
+    email = forms.EmailField(required=True) 
+
+    class Meta:
+        model = Cliente
+        # Inclua apenas os campos que você quer permitir que o cliente edite
+        fields = ['nome', 'sobrenome', 'email', 'telefone'] 
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'sobrenome': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'readonly': 'readonly'}), # Torna o email não editável
+            'telefone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(XX) XXXXX-XXXX'}),
+        }
