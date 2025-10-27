@@ -43,7 +43,12 @@
                 
                 <div class="modal-body">
                     
-                    
+                    <div id="serviceDisplayBlock">
+                        <label>Serviço Selecionado:</label>
+                        <span id="selectedServiceName" style="font-weight: bold;"></span>
+                        <input type="hidden" id="modalServiceId" name="servico_id_modal"> 
+                    </div>
+                    <br>
                     <label for="modalProfissionalSelect">Selecione o Profissional:</label>
                     <select id="modalProfissionalSelect" name="profissional_id" required>
                         <option value="" disabled selected>Selecione um Profissional</option> 
