@@ -14,13 +14,7 @@
           <h2>Entrar no sistema</h2>
           <p class="subtitle">Acesse sua conta com e-mail e senha.</p>
         
-          {% if messages %}
-            {% for message in messages %}
-                <div class="message-{{ message.tags }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-          {% endif %}
+          {% include 'messages.html' %}
 
           <form method="post"> 
             {% csrf_token %}

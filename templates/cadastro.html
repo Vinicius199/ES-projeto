@@ -9,13 +9,8 @@
         <h2>Criar conta</h2>
         <p class="subtitle">Preencha os dados abaixo para se cadastrar.</p>
 
-        {# EXIBIÇÃO DE MENSAGENS GERAIS #}
-        {% if messages %} 
-            {% for message in messages %}
-                <div class="message-{{ message.tags }}">{{ message }}</div>
-            {% endfor %} 
-        {% endif %} 
-        
+        {% include 'messages.html' %}
+               
         <form method="POST" action="{% url 'cadastro' %}">
             {% csrf_token %} 
             
