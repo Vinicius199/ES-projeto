@@ -8,6 +8,15 @@
     <header>
         <h1>Escolha um Serviço</h1>
     </header>
+    {% if messages %}
+        <div class="message-container" style="padding: 10px; margin: 10px auto; max-width: 800px;">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" style="padding: 15px; margin-bottom: 10px; border-radius: 4px; color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb;">
+                {{ message }}
+            </div>
+        {% endfor %}
+        </div>
+    {% endif %}
 
     <div class="container">
         {% for servico in servicos %}
@@ -68,13 +77,16 @@
         </div>
     {% endif %}
 
-        <form method="post" id="agendamentoForm" action="{% url 'service' %}" 
-        data-api-url="{% url 'profissionais_por_servico' 0 %}" style="display:none;">
-        {% csrf_token %}
-        <input type="hidden" id="form_servico_id" name="servico_id">
-        <input type="hidden" id="form_data_hora" name="data_hora">
-        <input type="hidden" id="form_profissional_id" name="profissional_id">
-    </form>
+    <form method="post" id="agendamentoForm" action="{% url 'service' %}" 
+    data-api-url="{% url 'profissionais_por_servico' 0 %}" style="display:none;">
+    {% csrf_token %}
+    
+    <input type="hidden" id="form_servico_id" name="servico"> 
+    
+    <input type="hidden" id="form_data_hora" name="data_hora">
+    
+    <input type="hidden" id="form_profissional_id" name="Profissional"> 
+</form>
 </body>
 {% endblock %}
 {% block extra_js %}

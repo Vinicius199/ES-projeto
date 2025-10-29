@@ -3,6 +3,7 @@ import re
 from django import forms
 from django.db.models import Q
 from datetime import timedelta
+from django.utils import timezone
 from .models import Cliente, Agendamento  # Importando o modelo Cliente
 
 class CadastroForm(forms.ModelForm):
@@ -115,7 +116,7 @@ class AgendamentoForm(forms.ModelForm):
         # Condição de sobreposição: A < D AND C < B
         
         # Aqui: A = Início do Existente; B = Fim do Existente;
-        #       C = data_hora_inicio (Novo); D = data_hora_fim_novo (Novo)
+        #       C = data_hora_inicio (Novo); D = data_hora_fim_novo (Novo)
         
         #Agendamentos existentes que começam ANTES do novo agendamento TERMINAR.
         conflitos_potenciais = Agendamento.objects.filter(
@@ -140,11 +141,16 @@ class AgendamentoForm(forms.ModelForm):
             # Se as duas condições (Filtro 1 e Filtro 2) forem verdadeiras, há sobreposição.
             if data_hora_inicio < data_hora_fim_existente:
                 
+                # CORREÇÃO DE TIMEZONE: Converte de UTC (banco) para o fuso horário local (settings.py)
+                inicio_local = timezone.localtime(agendamento_existente.data_hora) 
+                fim_local = timezone.localtime(data_hora_fim_existente)
+                
                 # Conflito encontrado!
                 raise forms.ValidationError(
                     f"Conflito de horário! O profissional {profissional} estará ocupado das "
-                    f"{agendamento_existente.data_hora.strftime('%H:%M')} às "
-                    f"{data_hora_fim_existente.strftime('%H:%M')}."
+                    # Usa o objeto datetime convertido para formatar a hora
+                    f"{inicio_local.strftime('%H:%M')} às "
+                    f"{fim_local.strftime('%H:%M')}."
                 )
-                    
+                        
         return cleaned_data
