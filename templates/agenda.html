@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Horario {% endblock %}
+
+{% block dashboard %}
+
+<div class="container">
+    <h1>Meus Horários Agendados</h1>
+
+    {% if agendamentos %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Data e Hora</th>
+                <th scope="col">Serviço e Profissional</th>
+                <th scope="col">Status</th>
+                <th scope="col">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for agendamento in agendamentos %}
+            <tr>
+                <td>{{ agendamento.data_hora|date:"d/m/Y H:i" }}</td>
+                
+                <td>{{ agendamento.servico }} com {{ agendamento.Profissional }}</td>
+                
+                <td>
+                    {% if agendamento.cancelado %}
+                        <span class="badge bg-danger">Cancelado</span>
+                    {% elif agendamento.confirmado %}
+                        <span class="badge bg-success">Confirmado</span>
+                    {% else %}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not agendamento.cancelado %}
+                        <form method="post" 
+                              action="{% url 'cancelar_agendamento' agendamento.id %}" 
+                              style="display:inline;" 
+                              class="cancel-form">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-excluir btn-sm"
+                                    onclick="return confirm('Tem certeza que deseja cancelar este agendamento?');">
+                                Cancelar
+                            </button>
+                        </form>
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>Você não tem horários agendados.</p>
+    {% endif %}
+
+    <p><a href="{% url 'service' %}" class="btn btn-primary">Agendar Novo Horário</a></p>
+</div>
+{% endblock %}

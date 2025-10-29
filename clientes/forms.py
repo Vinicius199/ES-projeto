@@ -62,3 +62,18 @@ class LoginForm(forms.Form):
             if user and not user.check_password(senha):
                 raise ValidationError("Email ou senha incorretos.")
         return cleaned_data
+    
+class ClienteUpdateForm(forms.ModelForm):
+    
+    email = forms.EmailField(required=True) 
+
+    class Meta:
+        model = Cliente
+        # Inclua apenas os campos que você quer permitir que o cliente edite
+        fields = ['nome', 'sobrenome', 'email', 'telefone'] 
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'sobrenome': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'readonly': 'readonly'}), # Torna o email não editável
+            'telefone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(XX) XXXXX-XXXX'}),
+        }
