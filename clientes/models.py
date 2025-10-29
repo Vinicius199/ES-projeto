@@ -9,7 +9,7 @@ from django.contrib.auth.hashers import make_password
 # retornado esteja sempre configurado corretamente (com senha hasheada).
 class ClienteManager(BaseUserManager):
     # FACTORY METHOD: create_user
-    # Responsável por criar e retornar objetos Clientes válidos.
+    # Responsável por criar e retornar objetos Clientes válidos. 
     def create_user(self, email, senha=None, **extra_fields):
         if not email:
             raise ValueError('O e-mail deve ser fornecido')
