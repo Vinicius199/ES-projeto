@@ -7,6 +7,14 @@
 <div class="container">
     <h1>Meus Horários Agendados</h1>
 
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
     {% if agendamentos %}
     <table class="table table-striped">
         <thead>
@@ -14,7 +22,6 @@
                 <th scope="col">Data e Hora</th>
                 <th scope="col">Serviço e Profissional</th>
                 <th scope="col">Status</th>
-                <th scope="col">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -40,12 +47,12 @@
                               class="cancel-form">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-excluir btn-sm"
-                                    onclick="return confirm('Tem certeza que deseja cancelar este agendamento?');">
+                                        onclick="return confirm('Tem certeza que deseja cancelar este agendamento?');">
                                 Cancelar
                             </button>
                         </form>
                     {% else %}
-                        —
+                        
                     {% endif %}
                 </td>
             </tr>

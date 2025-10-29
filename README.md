@@ -14,7 +14,6 @@ evita conflito de versão
 
 No CMD rode
 
-
 python -m venv venv
 
 depois ative o ambiente virtual
