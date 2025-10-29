@@ -98,7 +98,7 @@ class AgendamentoForm(forms.ModelForm):
         if not all([profissional, servico, data_hora_inicio]):
             return cleaned_data 
         
-        # 2. Calcular o tempo de término do NOVO agendamento
+        #Calcular o tempo de término do NOVO agendamento
         try:
             # Obtém a duração do Servico
             duracao = servico.duracao_minutos 
@@ -117,7 +117,7 @@ class AgendamentoForm(forms.ModelForm):
         # Aqui: A = Início do Existente; B = Fim do Existente;
         #       C = data_hora_inicio (Novo); D = data_hora_fim_novo (Novo)
         
-        # Filtro 1: Agendamentos existentes que começam ANTES do novo agendamento TERMINAR.
+        #Agendamentos existentes que começam ANTES do novo agendamento TERMINAR.
         conflitos_potenciais = Agendamento.objects.filter(
             Profissional=profissional,
             cancelado=False,
@@ -129,7 +129,7 @@ class AgendamentoForm(forms.ModelForm):
             pk=self.instance.pk if self.instance else None 
         )
 
-        # Filtro 2 (Manual): Verifica se o AGENDAMENTO EXISTENTE TERMINA DEPOIS do NOVO COMEÇAR.
+        #Verifica se o AGENDAMENTO EXISTENTE TERMINA DEPOIS do NOVO COMEÇAR.
         for agendamento_existente in conflitos_potenciais:
             
             # Pega a duração do serviço do agendamento existente

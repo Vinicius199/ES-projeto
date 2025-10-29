@@ -77,21 +77,18 @@ def service(request):
     
     # Lógica para processar o agendamento (POST)
     elif request.method == 'POST':
-        # 1. Capturar os dados que vieram do formulário oculto
+        #Captura os dados que vieram do formulário oculto
         servico_id = request.POST.get('servico_id')
         data_hora_str = request.POST.get('data_hora')
         profissional_id = request.POST.get('profissional_id')
         
-        # 2. Validação básica (garantir que os IDs não são vazios)
+        # Validação básica garante que os IDs não são vazios
         if not all([servico_id, data_hora_str, profissional_id]):
-            # Se faltar dados, retorna para a página de serviços com erro (ou exibe uma mensagem)
-            # Para simplificar, vamos redirecionar:
-            # messages.error(request, "Dados de agendamento incompletos.")
             return redirect('service') 
 
         try:
-            # 3. Converter data/hora e buscar objetos
-            # Lembre-se: datetime-local envia no formato 'YYYY-MM-DDTHH:MM'
+            # Converte data/hora e buscar objetos
+            # Datetime-local envia no formato 'YYYY-MM-DDTHH:MM'
             from datetime import datetime
             data_hora_agendamento = datetime.strptime(data_hora_str, '%Y-%m-%dT%H:%M')
             
@@ -99,7 +96,7 @@ def service(request):
             profissional = Profissional.objects.get(pk=profissional_id)
             cliente = request.user # O cliente é o usuário logado
 
-            # 4. Salvar o agendamento no banco de dados
+            #Salvar o agendamento no banco de dados
             Agendamento.objects.create(
                 cliente=cliente,
                 servico=servico,
@@ -109,8 +106,8 @@ def service(request):
             )
             
             #REDIRECIONAR PARA A PÁGINA 'agenda' APÓS O SUCESSO!
-            # messages.success(request, "Agendamento realizado com sucesso!")
-            return redirect('agenda') # <-- A SOLUÇÃO FINAL
+            messages.success(request, "Agendamento realizado com sucesso!")
+            return redirect('agenda')
 
         except Exception as e:
             # Se a busca de objetos falhar (ID inválido, por exemplo)
@@ -125,12 +122,9 @@ def get_profissionais_por_servico(request, servico_id):
     Esta view será chamada via AJAX pelo JavaScript.
     """
     # É uma boa prática proteger views de API/AJAX para que apenas chamadas AJAX as usem
-    #if not request.headers.get('x-requested-with') == 'XMLHttpRequest':
-    #    return JsonResponse({'error': 'Requisição inválida.'}, status=400)
     
     try:
-        # Encontra o serviço ou retorna erro 404
-        # Note: get_object_or_404 foi importado no topo
+        
         servico = get_object_or_404(Servico, pk=servico_id)
         
         # Filtra os profissionais relacionados ao serviço
@@ -213,11 +207,11 @@ def cliente(request):
     # O request.user já é a instância do cliente logado (o objeto Cliente)
 
     if request.method == 'POST':
-        # 1. Popula o formulário com os dados POST e a instância atual do usuário
+        #Popula o formulário com os dados POST e a instância atual do usuário
         form = ClienteUpdateForm(request.POST, instance=request.user)
         
         if form.is_valid():
-            # 2. Salva a instância atualizada do usuário no banco
+            # Salva a instância atualizada do usuário no banco
             form.save()
             messages.success(request, 'Seus dados foram atualizados com sucesso! ✅')
             return redirect('cliente')
