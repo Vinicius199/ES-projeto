@@ -1,5 +1,4 @@
 // FUNÇÕES DE CONTROLE DO MODAL
-
 // Define a função de fechar
 function closeModal() {
     const modal = document.getElementById('myModal');
@@ -111,9 +110,7 @@ function openModal(serviceName, serviceId) {
     modal.style.display = 'block'; 
 }
 
-// =========================================================
 // FUNÇÃO PARA SUBMETER O FORMULÁRIO
-// =========================================================
 function submitForm() {
     // 1. Captura os elementos e valores
     const servicoId = document.getElementById('modalServiceId').value;

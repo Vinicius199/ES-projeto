@@ -57,9 +57,7 @@ class Cliente(AbstractBaseUser, PermissionsMixin):
     # que o ORM do Django espera para criar e buscar instâncias de Cliente.
     objects = ClienteManager() 
 
-    # ------------------------------------------------------------------
     # IMPLEMENTAÇÃO DO TEMPLATE METHOD ( EXIGIDOS PELO ABSTRACTBASEUSER)
-    # ------------------------------------------------------------------
     
     # ADAPTER / TEMPLATE : Adaptação do Campo de Login.
     # O Template Method (AbstractBaseUser) define que deve haver um campo de login.
@@ -108,8 +106,7 @@ class Servico(models.Model):
     nome = models.CharField(max_length=100, unique=True)
     descricao = models.TextField()
     duracao_minutos = models.PositiveIntegerField(default=60)
-    # Não precisa mais do campo 'profissionais', pois o ManyToMany é definido no Profissional.
-    
+
     def __str__(self):
         return self.nome
 
