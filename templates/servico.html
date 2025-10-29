@@ -44,7 +44,6 @@
                 <div class="modal-body">
                     
                     <div id="serviceDisplayBlock">
-                        <label>Serviço Selecionado:</label>
                         <span id="selectedServiceName" style="font-weight: bold;"></span>
                         <input type="hidden" id="modalServiceId" name="servico_id_modal"> 
                     </div>
@@ -69,11 +68,16 @@
         </div>
     {% endif %}
 
-    <form method="post" id="agendamentoForm" action="{% url 'service' %}" style="display:none;">
+        <form method="post" id="agendamentoForm" action="{% url 'service' %}" 
+        data-api-url="{% url 'profissionais_por_servico' 0 %}" style="display:none;">
         {% csrf_token %}
         <input type="hidden" id="form_servico_id" name="servico_id">
         <input type="hidden" id="form_data_hora" name="data_hora">
         <input type="hidden" id="form_profissional_id" name="profissional_id">
     </form>
-    </body>
+</body>
+{% endblock %}
+{% block extra_js %}
+
+<script src="{% static 'js/service.js' %}"></script>
 {% endblock %}

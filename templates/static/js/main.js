@@ -1,8 +1,8 @@
-// Referências aos botões (MANTIDAS)
+// Referências aos botões
 const btnLogin = document.getElementById('btnLogin');
 const btnCadastro = document.getElementById('btnCadastro');
 
-// Eventos de clique (simples) (MANTIDOS)
+// Eventos de clique (simples) 
 if (btnLogin) {
     btnLogin.addEventListener('click', () => {
         // Lógica de redirecionamento ou ação de login
@@ -15,7 +15,7 @@ if (btnCadastro) {
     });
 }
 
-// Função para obter o CSRF Token (MANTIDA, mas não usada diretamente neste contexto de POST via form)
+// Função para obter o CSRF Token 
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -30,53 +30,9 @@ function getCookie(name) {
     }
     return cookieValue;
 }
- 
-// 💡 FUNÇÃO ATUALIZADA: Agora pré-seleciona o serviço no DROPDOWN
-function openModal(serviceName, serviceId) {
-    const modal = document.getElementById('myModal');
-    const serviceSelect = document.getElementById('modalServiceSelect');
-    const dateTimeInput = document.getElementById('datetime');
-
-    // 1. Pré-seleciona o serviço clicado no novo campo <select>
-    if (serviceSelect && serviceId) {
-        serviceSelect.value = serviceId; 
-    }
-
-    // 2. Configura a data mínima para evitar agendamento no passado (melhora a UX)
-    const now = new Date();
-    // Ajusta para ter um tempo mínimo correto (evita problemas de fuso horário no `datetime-local`)
-    const offset = now.getTimezoneOffset() * 60000;
-    const localISOTime = (new Date(Date.now() - offset)).toISOString().slice(0, 16);
-    
-    dateTimeInput.min = localISOTime;
-
-    modal.style.display = 'block';
-}
 
 function closeModal() {
     document.getElementById('myModal').style.display = 'none';
-}
-
-// 💡 FUNÇÃO ATUALIZADA: Agora obtém o ID do serviço do DROPDOWN
-function submitForm() {
-    // Referência ao novo campo <select>
-    const serviceSelect = document.getElementById('modalServiceSelect');
-    const dataHora = document.getElementById('datetime').value;
-    
-    // Obtém o ID do serviço selecionado no dropdown
-    const servicoId = serviceSelect.value;
-            
-    if (!dataHora || !servicoId) {
-        alert("Por favor, selecione um serviço e uma data/hora.");
-        return;
-    }
-            
-    // Preenche os campos ocultos do formulário POST com os valores do modal
-    document.getElementById('form_servico_id').value = servicoId;
-    document.getElementById('form_data_hora').value = dataHora;
-            
-    // Envia o formulário para a view
-    document.getElementById('agendamentoForm').submit();
 }
 
 // Funções de toggle/erro (MANTIDAS, embora pareçam ser para outra parte da aplicação)
