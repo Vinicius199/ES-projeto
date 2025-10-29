@@ -1,7 +1,9 @@
 from django.core.exceptions import ValidationError
 import re
 from django import forms
-from .models import Cliente  # Importando o modelo Cliente
+from django.db.models import Q
+from datetime import timedelta
+from .models import Cliente, Agendamento  # Importando o modelo Cliente
 
 class CadastroForm(forms.ModelForm):
     # Campo 'senha' que aparecerá no formulário
@@ -77,3 +79,72 @@ class ClienteUpdateForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'class': 'form-control', 'readonly': 'readonly'}), # Torna o email não editável
             'telefone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(XX) XXXXX-XXXX'}),
         }
+
+class AgendamentoForm(forms.ModelForm):
+    class Meta:
+        model = Agendamento
+        fields = ['Profissional', 'servico', 'data_hora'] 
+        
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        #Obtem dados do formulário
+        profissional = cleaned_data.get('Profissional')
+        servico = cleaned_data.get('servico')
+        data_hora_inicio = cleaned_data.get('data_hora')
+        
+        # Se algum campo essencial não foi preenchido (erro de campo obrigatório), 
+        # a validação de conflito deve ser ignorada para evitar exceptions
+        if not all([profissional, servico, data_hora_inicio]):
+            return cleaned_data 
+        
+        # 2. Calcular o tempo de término do NOVO agendamento
+        try:
+            # Obtém a duração do Servico
+            duracao = servico.duracao_minutos 
+        except AttributeError:
+            # Caso o Servico selecionado não tenha o campo 'duracao_minutos'
+            # (Ajuda a debugar se o modelo Servico estiver incorreto)
+            raise forms.ValidationError("Erro interno: O Serviço selecionado não possui o campo 'duracao_minutos'.")
+            
+        data_hora_fim_novo = data_hora_inicio + timedelta(minutes=duracao)
+        
+        # --- Lógica de Conflito de Horário ---
+        
+        # O conflito acontece quando dois intervalos de tempo [A, B] e [C, D] se sobrepõem.
+        # Condição de sobreposição: A < D AND C < B
+        
+        # Aqui: A = Início do Existente; B = Fim do Existente;
+        #       C = data_hora_inicio (Novo); D = data_hora_fim_novo (Novo)
+        
+        # Filtro 1: Agendamentos existentes que começam ANTES do novo agendamento TERMINAR.
+        conflitos_potenciais = Agendamento.objects.filter(
+            Profissional=profissional,
+            cancelado=False,
+            # (A < D) - O Existente começa antes do Novo terminar
+            data_hora__lt=data_hora_fim_novo, 
+            
+        ).exclude(
+            # Exclui o próprio agendamento se for uma edição
+            pk=self.instance.pk if self.instance else None 
+        )
+
+        # Filtro 2 (Manual): Verifica se o AGENDAMENTO EXISTENTE TERMINA DEPOIS do NOVO COMEÇAR.
+        for agendamento_existente in conflitos_potenciais:
+            
+            # Pega a duração do serviço do agendamento existente
+            duracao_existente = agendamento_existente.servico.duracao_minutos
+            data_hora_fim_existente = agendamento_existente.data_hora + timedelta(minutes=duracao_existente)
+            
+            # (C < B) - O Novo começa antes do Existente terminar.
+            # Se as duas condições (Filtro 1 e Filtro 2) forem verdadeiras, há sobreposição.
+            if data_hora_inicio < data_hora_fim_existente:
+                
+                # Conflito encontrado!
+                raise forms.ValidationError(
+                    f"Conflito de horário! O profissional {profissional} estará ocupado das "
+                    f"{agendamento_existente.data_hora.strftime('%H:%M')} às "
+                    f"{data_hora_fim_existente.strftime('%H:%M')}."
+                )
+                    
+        return cleaned_data
