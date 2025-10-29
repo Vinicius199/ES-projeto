@@ -11,7 +11,9 @@ urlpatterns = [
     path('sair/', views.logout, name='logout_view'),
     path('agenda/', views.agenda, name='agenda'),
     path('cliente/', views.cliente, name='cliente'),
-    path('api/profissionais/<int:servico_id>/', views.get_profissionais_por_servico, name='api_profissionais_servico'),
+    path('servico/<int:servico_id>/profissionais/', views.get_profissionais_por_servico, name='profissionais_por_servico'),
+    path('agenda/cancelar/<int:agendamento_id>/', views.cancelar_agendamento, name='cancelar_agendamento'),
+    
     #path("google_login/", views.google_login, name="google_login"),
     #path("oauth2callback/", views.oauth2callback, name="oauth2callback"),
     #path("calendar/", views.calendar_events, name="calendar_events"),

@@ -1,21 +1,18 @@
-import datetime
-from django.utils import timezone #lida com a data e hora
+from datetime import datetime, timedelta # Adicionado timedelta para o cancelamento
+from django.utils import timezone # Lida com a data e hora (usado no cancelamento)
 from django.shortcuts import get_object_or_404, render, redirect
-from .forms import CadastroForm, ClienteUpdateForm, LoginForm 
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import login as django_login, authenticate, logout as django_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-import json
+from .forms import CadastroForm, ClienteUpdateForm 
 from .models import Cliente, Agendamento, Servico, Profissional
-from . import views
-import re
 
 def home(request):
     return render(request, 'home.html')
     
-def fazer_login(request): # Certifique-se de que este nome está no seu urls.py
+def fazer_login(request):
     
     # Redireciona se já estiver autenticado
     if request.user.is_authenticated:
@@ -72,67 +69,55 @@ def cadastro(request):
 
 #@login_required
 def service(request):
-    # Obtém a lista de serviços do Banco de Dados para exibir
-    servicos = Servico.objects.all() 
+    # Lógica para exibir a página de serviços (GET)
+    if request.method == 'GET':
+        servicos = Servico.objects.all()
+        context = {'servicos': servicos}
+        return render(request, 'servico.html', context)
     
-    if request.method == 'POST':
-
+    # Lógica para processar o agendamento (POST)
+    elif request.method == 'POST':
+        # 1. Capturar os dados que vieram do formulário oculto
         servico_id = request.POST.get('servico_id')
-        data_hora_str = request.POST.get('data_hora') 
-        profissional_id = request.POST.get('profissional_id') 
-
+        data_hora_str = request.POST.get('data_hora')
+        profissional_id = request.POST.get('profissional_id')
+        
+        # 2. Validação básica (garantir que os IDs não são vazios)
         if not all([servico_id, data_hora_str, profissional_id]):
-            messages.error(request, "Todos os campos (Serviço, Profissional, Data/Hora) são obrigatórios.")
-            return redirect('service')
+            # Se faltar dados, retorna para a página de serviços com erro (ou exibe uma mensagem)
+            # Para simplificar, vamos redirecionar:
+            # messages.error(request, "Dados de agendamento incompletos.")
+            return redirect('service') 
 
         try:
-            # 1. Busca os objetos pelo ID
+            # 3. Converter data/hora e buscar objetos
+            # Lembre-se: datetime-local envia no formato 'YYYY-MM-DDTHH:MM'
+            from datetime import datetime
+            data_hora_agendamento = datetime.strptime(data_hora_str, '%Y-%m-%dT%H:%M')
+            
             servico = Servico.objects.get(pk=servico_id)
-            profissional = Profissional.objects.get(pk=profissional_id) # <-- BUSCA O PROFISSIONAL
-            
-            # 2. Converte a string de data/hora para um objeto datetime (NAIVE)
-            data_hora_naive = timezone.datetime.strptime(data_hora_str, '%Y-%m-%dT%H:%M')
-            data_hora_agendamento = timezone.make_aware(data_hora_naive)
-            
-            # 3. VALIDAÇÃO DO HORÁRIO NO PASSADO
-            if data_hora_agendamento < timezone.now():
-                messages.error(request, "Não é possível agendar horários no passado. Por favor, escolha uma data e hora futuras.")
-                return redirect('service') 
-            
-            # 4. Verifica se o profissional E o horário já estão ocupados
-            # A verificação deve ser mais rigorosa: conflito para o MESMO PROFISSIONAL
-            conflito = Agendamento.objects.filter(
-                profissional=profissional, # <-- NOVO: Verifica conflito apenas para o profissional escolhido
-                data_hora=data_hora_agendamento
-            ).exists()
-            
-            if conflito:
-                messages.error(request, f"O horário das {data_hora_agendamento.strftime('%H:%M')} já está reservado para {profissional.nome}. Escolha outro.")
-                return redirect('service')
+            profissional = Profissional.objects.get(pk=profissional_id)
+            cliente = request.user # O cliente é o usuário logado
 
-            # 5. SALVAR NO BANCO DE DADOS
+            # 4. Salvar o agendamento no banco de dados
             Agendamento.objects.create(
-                cliente=request.user, 
+                cliente=cliente,
                 servico=servico,
-                profissional=profissional, # <-- NOVO: SALVA O PROFISSIONAL
-                data_hora=data_hora_agendamento # Salva o objeto AWARE corrigido
+                Profissional=profissional,
+                data_hora=data_hora_agendamento,
+                confirmado=True
             )
             
-            messages.success(request, f"Agendamento de {servico.nome} com {profissional.nome} realizado para {data_hora_agendamento.strftime('%d/%m/%Y às %H:%M')}!")
-            return redirect('agenda') 
-            
-        except Servico.DoesNotExist:
-            messages.error(request, "Serviço inválido.")
-        except Profissional.DoesNotExist: # <-- NOVO
-            messages.error(request, "Profissional inválido.")
-        except ValueError:
-            messages.error(request, "Formato de data e hora inválido. Certifique-se de preencher ambos os campos.")
-        except Exception as e:
-            print("ERRO DE SALVAMENTO DETECTADO:", e)
-            messages.error(request, f"Ocorreu um erro inesperado ao agendar: {e}")
+            #REDIRECIONAR PARA A PÁGINA 'agenda' APÓS O SUCESSO!
+            # messages.success(request, "Agendamento realizado com sucesso!")
+            return redirect('agenda') # <-- A SOLUÇÃO FINAL
 
-    # Renderiza a tela de serviços (GET Request)
-    return render(request, 'servico.html', {'servicos': servicos})
+        except Exception as e:
+            # Se a busca de objetos falhar (ID inválido, por exemplo)
+            print(f"Erro ao salvar agendamento: {e}")
+            # messages.error(request, "Erro ao processar seu agendamento. Tente novamente.")
+            return redirect('service')
+
 
 def get_profissionais_por_servico(request, servico_id):
     """
@@ -152,9 +137,9 @@ def get_profissionais_por_servico(request, servico_id):
         # 'profissionais_aptos' é o related_name definido no seu models.py
         profissionais = servico.profissionais_aptos.all().order_by('nome')
         
-        # 💡 DEBUG: Imprima o que está sendo buscado
-        print(f"Serviço ID: {servico_id}")
-        print(f"Profissionais encontrados: {profissionais.count()}")
+        # prints para testes: Imprima o que está sendo buscado
+        #print(f"Serviço ID: {servico_id}")
+        #print(f"Profissionais encontrados: {profissionais.count()}")
         
         # Prepara os dados para o JavaScript
         profissionais_data = [
@@ -187,6 +172,43 @@ def agenda(request):
     return render(request, 'agenda.html', context)
 
 @login_required
+def cancelar_agendamento(request, agendamento_id):
+    if request.method == 'POST':
+        #Busca o agendamento
+        agendamento = get_object_or_404(
+            Agendamento, 
+            pk=agendamento_id, 
+            cliente=request.user
+        )
+
+        #Verifica se o agendamento já está cancelado
+        if agendamento.cancelado:
+            messages.warning(request, "Este agendamento já foi cancelado.")
+            return redirect('agenda')
+
+        # Obtém a hora atual com timezone
+        agora = timezone.now()
+        
+        # Calcula o "momento limite": 15 minutos antes do agendamento
+        momento_limite = agendamento.data_hora - timedelta(minutes=15)
+        
+        # Verificação de restrição (faltam menos de 15 minutos)
+        if agora >= momento_limite:
+            messages.error(request, "O cancelamento só pode ser feito até 15 minutos antes do horário marcado.")
+            # Redireciona SEM cancelar
+            return redirect('agenda')
+        
+        # Atualiza o status de cancelamento
+        agendamento.cancelado = True
+        agendamento.confirmado = False 
+        
+        agendamento.save()
+        
+        messages.success(request, "Agendamento cancelado com sucesso.")
+
+    return redirect('agenda')
+
+@login_required
 def cliente(request):
     # O request.user já é a instância do cliente logado (o objeto Cliente)
 
@@ -210,3 +232,4 @@ def cliente(request):
         'form': form,
     }
     return render(request, 'cliente.html', context)
+

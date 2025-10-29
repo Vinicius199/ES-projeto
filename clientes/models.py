@@ -133,6 +133,16 @@ class Agendamento(models.Model):
         verbose_name='Profissional Agendado'
     )
 
+    confirmado = models.BooleanField(
+        default=False, # Definir como False é o padrão, mas a view vai sobrescrever.
+        verbose_name='Agendamento Confirmado'
+    )
+
+    cancelado = models.BooleanField(
+        default=False, 
+        verbose_name='Cancelado'
+    )
+
     data_hora = models.DateTimeField()
     
     class Meta:
