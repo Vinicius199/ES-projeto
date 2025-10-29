@@ -81,21 +81,15 @@ class Cliente(AbstractBaseUser, PermissionsMixin):
         return f"{self.nome} {self.sobrenome} - {self.email}"
 
 class Profissional(models.Model):
-    # Relaciona o profissional ao usuário Cliente (opcional, mas bom para login/gestão)
-    # Você pode querer usar o modelo Cliente para login, mas se for um profissional externo, use campos normais.
     nome = models.CharField(max_length=100)
     sobrenome = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     telefone = models.CharField(max_length=15, blank=True)
     
-    # 💡 RELACIONAMENTO MANY-TO-MANY COM SERVIÇO
     # Um profissional pode fazer vários serviços e um serviço pode ter vários profissionais.
     servicos = models.ManyToManyField('Servico', related_name='profissionais_aptos') 
     
-    # Se você quiser que o profissional tenha uma ligação com o modelo Cliente, descomente esta linha:
-    # usuario_cliente = models.OneToOneField(Cliente, on_delete=models.CASCADE, null=True, blank=True)
-
-
+    
     def get_full_name(self):
         return f"{self.nome} {self.sobrenome}"
 
