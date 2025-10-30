@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import login as django_login, authenticate, logout as django_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .forms import CadastroForm, ClienteUpdateForm 
+from .forms import CadastroForm, ClienteUpdateForm, AgendamentoForm
 from .models import Cliente, Agendamento, Servico, Profissional
 
 def home(request):
@@ -67,54 +67,72 @@ def cadastro(request):
         form = CadastroForm()
         return render(request, 'cadastro.html', {'form': form})
 
-#@login_required
+# views.py (Ajustado para capturar e exibir erros do formulário via messages)
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+# É crucial garantir que todos os modelos e o formulário necessário estejam importados
+from .models import Servico, Profissional, Agendamento 
+from .forms import AgendamentoForm 
+
+@login_required
 def service(request):
     # Lógica para exibir a página de serviços (GET)
     if request.method == 'GET':
         servicos = Servico.objects.all()
-        context = {'servicos': servicos}
+        # Ajuste: Instanciar sem 'initial' se o campo 'cliente' não for um campo de formulário
+        form = AgendamentoForm() 
+        context = {
+            'servicos': servicos,
+            'form': form
+        }
         return render(request, 'servico.html', context)
     
     # Lógica para processar o agendamento (POST)
     elif request.method == 'POST':
-        #Captura os dados que vieram do formulário oculto
-        servico_id = request.POST.get('servico_id')
-        data_hora_str = request.POST.get('data_hora')
-        profissional_id = request.POST.get('profissional_id')
+        # O formulário AgendamentoForm espera 'Profissional', 'servico', 'data_hora'.
+        # Precisamos incluir a instância 'cliente' na criação do objeto.
         
-        # Validação básica garante que os IDs não são vazios
-        if not all([servico_id, data_hora_str, profissional_id]):
+        form = AgendamentoForm(request.POST) 
+        
+        if form.is_valid():
+            # CASO DE SUCESSO: O agendamento está OK e não há conflito
+            try:
+                # O form.save(commit=False) cria o objeto, mas não salva no banco ainda.
+                agendamento = form.save(commit=False)
+                
+                # Campos adicionais antes de salvar
+                agendamento.cliente = request.user 
+                agendamento.confirmado = True
+                
+                #Agora sim salva no banco de dados
+                agendamento.save() 
+                
+                messages.success(request, "Agendamento realizado com sucesso! 🎉")
+                return redirect('agenda')
+
+            except Exception as e:
+                # Erro interno na criação/salvamento do objeto
+                print(f"Erro ao salvar agendamento: {e}")
+                messages.error(request, "Erro interno ao processar o agendamento.")
+                
+                # Ajuste: Redireciona para 'service' para mostrar erro genérico
+                return redirect('service') 
+                
+        else:
+            # CASO DE ERRO: Conflito de horário ou campo obrigatório faltando
+            
+            for field, errors in form.errors.items():
+                for error in errors:
+                    # 'error' aqui contém a mensagem de conflito de horário (ex: "Conflito de horário!...")
+                    messages.error(request, f"{error}") 
+            
+            # Recarrega a página de serviços para mostrar as mensagens (o aviso de erro de conflito)
             return redirect('service') 
-
-        try:
-            # Converte data/hora e buscar objetos
-            # Datetime-local envia no formato 'YYYY-MM-DDTHH:MM'
-            from datetime import datetime
-            data_hora_agendamento = datetime.strptime(data_hora_str, '%Y-%m-%dT%H:%M')
             
-            servico = Servico.objects.get(pk=servico_id)
-            profissional = Profissional.objects.get(pk=profissional_id)
-            cliente = request.user # O cliente é o usuário logado
-
-            #Salvar o agendamento no banco de dados
-            Agendamento.objects.create(
-                cliente=cliente,
-                servico=servico,
-                Profissional=profissional,
-                data_hora=data_hora_agendamento,
-                confirmado=True
-            )
-            
-            #REDIRECIONAR PARA A PÁGINA 'agenda' APÓS O SUCESSO!
-            messages.success(request, "Agendamento realizado com sucesso!")
-            return redirect('agenda')
-
-        except Exception as e:
-            # Se a busca de objetos falhar (ID inválido, por exemplo)
-            print(f"Erro ao salvar agendamento: {e}")
-            # messages.error(request, "Erro ao processar seu agendamento. Tente novamente.")
-            return redirect('service')
-
+    # Caso o request.method seja algo inesperado
+    return redirect('service')
 
 def get_profissionais_por_servico(request, servico_id):
     """
