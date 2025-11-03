@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta # Adicionado timedelta para o cancelamento
-from django.utils import timezone # Lida com a data e hora (usado no cancelamento)
+from datetime import datetime, timedelta 
+from django.utils import timezone 
 from django.shortcuts import get_object_or_404, render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -67,21 +67,11 @@ def cadastro(request):
         form = CadastroForm()
         return render(request, 'cadastro.html', {'form': form})
 
-# views.py (Ajustado para capturar e exibir erros do formulário via messages)
-
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-# É crucial garantir que todos os modelos e o formulário necessário estejam importados
-from .models import Servico, Profissional, Agendamento 
-from .forms import AgendamentoForm 
-
 @login_required
 def service(request):
     # Lógica para exibir a página de serviços (GET)
     if request.method == 'GET':
         servicos = Servico.objects.all()
-        # Ajuste: Instanciar sem 'initial' se o campo 'cliente' não for um campo de formulário
         form = AgendamentoForm() 
         context = {
             'servicos': servicos,
@@ -89,7 +79,6 @@ def service(request):
         }
         return render(request, 'servico.html', context)
     
-    # Lógica para processar o agendamento (POST)
     elif request.method == 'POST':
         # O formulário AgendamentoForm espera 'Profissional', 'servico', 'data_hora'.
         # Precisamos incluir a instância 'cliente' na criação do objeto.
@@ -131,7 +120,6 @@ def service(request):
             # Recarrega a página de serviços para mostrar as mensagens (o aviso de erro de conflito)
             return redirect('service') 
             
-    # Caso o request.method seja algo inesperado
     return redirect('service')
 
 def get_profissionais_por_servico(request, servico_id):
@@ -139,8 +127,7 @@ def get_profissionais_por_servico(request, servico_id):
     Retorna uma lista JSON dos profissionais aptos para o servico_id.
     Esta view será chamada via AJAX pelo JavaScript.
     """
-    # É uma boa prática proteger views de API/AJAX para que apenas chamadas AJAX as usem
-    
+   
     try:
         
         servico = get_object_or_404(Servico, pk=servico_id)
@@ -201,7 +188,7 @@ def cancelar_agendamento(request, agendamento_id):
         # Obtém a hora atual com timezone
         agora = timezone.now()
         
-        # Calcula o "momento limite": 15 minutos antes do agendamento
+        # Calcula o "momento limite": 15 minutos antes do agendamento(da para ajustar aqui o tempo como quiser)
         momento_limite = agendamento.data_hora - timedelta(minutes=15)
         
         # Verificação de restrição (faltam menos de 15 minutos)

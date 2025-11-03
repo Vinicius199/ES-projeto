@@ -4,7 +4,7 @@ from django import forms
 from django.db.models import Q
 from datetime import timedelta
 from django.utils import timezone
-from .models import Cliente, Agendamento  # Importando o modelo Cliente
+from .models import Cliente, Agendamento
 
 class CadastroForm(forms.ModelForm):
     # Campo 'senha' que aparecerá no formulário
@@ -49,7 +49,6 @@ class CadastroForm(forms.ModelForm):
         if commit:
             user.save()
         return user
-# ---------------------------------------------
    
 class LoginForm(forms.Form):
     email = forms.EmailField(label='Email', max_length=100)
@@ -104,14 +103,10 @@ class AgendamentoForm(forms.ModelForm):
             # Obtém a duração do Servico
             duracao = servico.duracao_minutos 
         except AttributeError:
-            # Caso o Servico selecionado não tenha o campo 'duracao_minutos'
-            # (Ajuda a debugar se o modelo Servico estiver incorreto)
             raise forms.ValidationError("Erro interno: O Serviço selecionado não possui o campo 'duracao_minutos'.")
             
         data_hora_fim_novo = data_hora_inicio + timedelta(minutes=duracao)
-        
-        # --- Lógica de Conflito de Horário ---
-        
+                
         # O conflito acontece quando dois intervalos de tempo [A, B] e [C, D] se sobrepõem.
         # Condição de sobreposição: A < D AND C < B
         
@@ -141,7 +136,6 @@ class AgendamentoForm(forms.ModelForm):
             # Se as duas condições (Filtro 1 e Filtro 2) forem verdadeiras, há sobreposição.
             if data_hora_inicio < data_hora_fim_existente:
                 
-                # CORREÇÃO DE TIMEZONE: Converte de UTC (banco) para o fuso horário local (settings.py)
                 inicio_local = timezone.localtime(agendamento_existente.data_hora) 
                 fim_local = timezone.localtime(data_hora_fim_existente)
                 
