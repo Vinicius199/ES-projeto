@@ -2,9 +2,9 @@ from django.core.exceptions import ValidationError
 import re
 from django import forms
 from django.db.models import Q
-from datetime import timedelta
+from datetime import timedelta, time
 from django.utils import timezone
-from .models import Cliente, Agendamento
+from .models import Cliente, Agendamento, Profissional, Servico
 
 class CadastroForm(forms.ModelForm):
     # Campo 'senha' que aparecerá no formulário
@@ -148,3 +148,60 @@ class AgendamentoForm(forms.ModelForm):
                 )
                         
         return cleaned_data
+    
+class ProfissionalForm(forms.ModelForm):
+    class Meta:
+        model = Profissional
+        fields = ['nome', 'sobrenome', 'email', 'telefone'] 
+        
+        widgets = {
+            'telefone': forms.TextInput(attrs={'placeholder': '(XX) XXXXX-XXXX'}),
+        }
+        
+    def clean_telefone(self):
+        telefone = self.cleaned_data.get('telefone')
+        telefone_limpo = re.sub(r'\D', '', telefone)
+        if len(telefone_limpo) < 10 or len(telefone_limpo) > 11:
+            raise forms.ValidationError("O número de telefone deve ter 10 ou 11 dígitos, incluindo o DDD.")
+                
+        return telefone_limpo
+
+class ServicoForm(forms.ModelForm):
+    
+    tempo = forms.TimeField(
+        required=True,
+        label='Tempo Estimado (Duração):',
+        widget=forms.TimeInput(attrs={
+            'type': 'time', 
+            'step': '60',   # Passo de 60 segundos (1 minuto)
+            'value': '00:30' # Valor padrão de 30 minutos
+        })
+    )
+    
+    profissionais = forms.ModelMultipleChoiceField(
+        queryset=Profissional.objects.all(),
+        required=False,
+        label='Designar Funcionário(s):',
+        widget=forms.SelectMultiple,
+    )
+
+    class Meta:
+        model = Servico
+        fields = ['nome', 'descricao', 'profissionais'] 
+        
+        labels = {
+            'nome': 'Nome do Serviço:',
+            'descricao': 'Descrição:',
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        tempo = cleaned_data.get('tempo')
+        
+        if tempo and isinstance(tempo, time):
+            total_minutos = tempo.hour * 60 + tempo.minute
+            
+            cleaned_data['duracao_minutos'] = total_minutos
+                
+        return cleaned_data
+        
