@@ -87,7 +87,7 @@ class Profissional(models.Model):
     telefone = models.CharField(max_length=15, blank=True)
     
     # Um profissional pode fazer vários serviços e um serviço pode ter vários profissionais.
-    servicos = models.ManyToManyField('Servico', related_name='profissionais_aptos') 
+    servicos = models.ManyToManyField('Servico', related_name='profissionais_aptos', blank=True ) 
     
     
     def get_full_name(self):

@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+
+<title>Painel Admin - Cadastros</title>
+</head>
+<body {% if is_editing %}class="editing-mode"{% endif %}> 
+    
+    <div class="header-links">
+        <a href="{% url 'home' %}">🌐 Meu Site</a> </div>
+
+    <div class="container">
+        <h1>🛠️ Painel Administrativo - Ações de Cadastro</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="action-buttons">
+            <button id="openFuncionarioModal" class="action-btn btn-funcionario">
+                👤 Cadastrar Funcionário
+            </button>
+            <button id="openServicoModal" class="action-btn btn-servico">
+                ⚙️ Cadastrar Serviço
+            </button>
+            <button id="openViewFuncionarioModal" class="action-btn btn-view-funcionario">
+                👀 Ver Funcionários
+            </button>
+            <button id="openViewServicoModal" class="action-btn btn-view-servico">
+                🔍 Ver Serviços
+            </button>
+        </div>
+    </div>
+    
+    <div id="funcionarioModal" class="modal 
+        {% if is_editing and profissional %}modal-open{% endif %}">
+        
+        <div class="modal-content">
+            <span class="close-btn" data-modal-target="funcionarioModal">&times;</span>
+            
+            <h2>👤 {% if is_editing and profissional %}Editar Funcionário: {{ profissional.get_full_name }}{% else %}Cadastro de Funcionário{% endif %}</h2>
+            
+            <form id="formFuncionario" 
+                action="{% if is_editing and profissional %}{% url 'editar_funcionario' profissional.pk %}{% else %}{% url 'api_cadastrar_profissional' %}{% endif %}" 
+                method="POST">
+                
+                {% csrf_token %}
+
+                {% if is_editing and profissional %}
+                    {# Se estiver editando, o Django form será usado #}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn-submit">Salvar Alterações</button>
+                {% else %}
+                    {# Cadastro (inputs diretos) #}
+                    <div class="form-group"><label for="nome_func">Nome:</label><input type="text" id="nome_func" name="nome" required /></div>
+                    <div class="form-group"><label for="sobrenome_func">Sobrenome:</label><input type="text" id="sobrenome_func" name="sobrenome" required /></div>
+                    <div class="form-group"><label for="email_func">Email:</label><input type="email" id="email_func" name="email" required /></div>
+                    <div class="form-group"><label for="telefone_func">Telefone:</label><input type="text" id="telefone_func" name="telefone" placeholder="(XX) XXXXX-XXXX" required/></div>
+                    <button type="submit" class="btn-submit">Salvar Funcionário</button>
+                {% endif %}
+
+            </form>
+        </div>
+    </div>
+
+    <div id="servicoModal" class="modal 
+        {% if is_editing and servico %}modal-open{% endif %}">
+
+        <div class="modal-content">
+            <span class="close-btn" data-modal-target="servicoModal">&times;</span>
+            
+            <h2>⚙️ {% if is_editing and servico %}Editar Serviço: {{ servico.nome }}{% else %}Cadastro de Serviço{% endif %}</h2>
+            
+            <form id="formServico" 
+                action="{% if is_editing and servico %}{% url 'editar_servico' servico.pk %}{% else %}{% url 'api_cadastrar_servico' %}{% endif %}" 
+                method="POST">
+
+                {% csrf_token %}
+
+                {% if is_editing and servico %}
+                    {# Se estiver editando, o Django form será usado #}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn-submit">Salvar Alterações</button>
+                {% else %}
+                    {# Cadastro (inputs diretos) #}
+                    <div class="form-group"><label for="nome_servico">Nome do Serviço:</label><input type="text" id="nome_servico" name="nome" required /></div>
+                    <div class="form-group"><label for="descricao_servico">Descrição:</label><textarea id="descricao_servico" name="descricao" required></textarea></div>
+                    
+                    <div class="form-group">
+                        <label for="tempo_servico">Tempo Estimado (Duração):</label>
+                        <input type="time" id="tempo_servico" name="tempo" value="00:30" step="60" required/>
+                        <small>Em formato HH:MM (ex: 00:30 para 30 minutos)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="funcionarios_servico">Designar Funcionário(s):</label>
+                        {# 🎯 CORRIGIDO: Removido o 'required' para ser opcional #}
+                        <select id="funcionarios_servico" name="profissionais" multiple>
+                            {% for profissional in profissionais_list %}
+                            <option value="{{ profissional.id }}">{{ profissional.nome }} {{ profissional.sobrenome }}</option>
+                            {% empty %}
+                            <option value="" disabled>Nenhum profissional cadastrado.</option>
+                            {% endfor %}
+                        </select>
+                        <small>Dica: Use Ctrl/Cmd para selecionar múltiplos funcionários.</small>
+                    </div>
+                    <button type="submit" class="btn-submit">Salvar Serviço</button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+    
+    <div id="viewFuncionarioModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" data-modal-target="viewFuncionarioModal">&times;</span>
+            <h2>👀 Gerenciar Funcionários</h2>
+            <table class="list-table">
+                <thead>
+                    <tr><th>ID</th><th>Nome</th><th>Email</th><th>Ações</th></tr>
+                </thead>
+                <tbody>
+                    {# Nota: 'funcionarios_list' ajustado para 'profissionais_list' para consistência, se necessário #}
+                    {% for profissional in profissionais_list %}
+                    <tr>
+                        <td>{{ profissional.id }}</td>
+                        <td>{{ profissional.nome }} {{ profissional.sobrenome }}</td>
+                        <td>{{ profissional.email }}</td>
+                        <td>
+                            <a href="{% url 'editar_funcionario' profissional.id %}" class="action-link btn-edit">✏️ Editar</a>
+                            <form action="{% url 'excluir_funcionario' profissional.id %}" method="POST" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-link btn-delete" onclick="return confirm('Tem certeza que deseja excluir este funcionário?');">❌ Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4">Nenhum funcionário cadastrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="viewServicoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" data-modal-target="viewServicoModal">&times;</span>
+            <h2>🔍 Gerenciar Serviços</h2>
+            <table class="list-table">
+                <thead>
+                    <tr><th>ID</th><th>Nome do Serviço</th><th>Duração (Minutos)</th><th>Ações</th></tr>
+                </thead>
+                <tbody>
+                    {% for servico in servicos_list %}
+                    <tr>
+                        <td>{{ servico.id }}</td>
+                        <td>{{ servico.nome }}</td> 
+                        <td>{{ servico.duracao_minutos }} min</td> 
+                        <td>
+                            <a href="{% url 'editar_servico' servico.id %}" class="action-link btn-edit">✏️ Editar</a>
+                            <form action="{% url 'excluir_servico' servico.id %}" method="POST" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="action-link btn-delete" onclick="return confirm('Tem certeza que deseja excluir este serviço?');">❌ Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4">Nenhum serviço cadastrado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="{% static 'js/admin.js' %}"></script>
+</body>
+</html>
