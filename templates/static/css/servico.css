@@ -56,7 +56,7 @@ header {
 }
 
 /* Modal Styles */
-.modal {
+.modalService {
     display: none;
     position: fixed;
     z-index: 1;
@@ -67,7 +67,7 @@ header {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
-.modal-content {
+.modal-contentService {
     background-color: white;
     margin: 10% auto;
     padding: 20px;

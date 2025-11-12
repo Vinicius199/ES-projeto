@@ -10,6 +10,9 @@
 
     <link rel="stylesheet" href="{% static 'css/servico.css' %}" />
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/agenda.css' %}" />
+
+    {% block extra_head %}{% endblock extra_head %}
   </head>
   <body>
     <nav>
@@ -53,5 +56,6 @@
 
     <script src="{% static 'js/servico.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/agenda.js' %}"></script>
   </body>
 </html>
