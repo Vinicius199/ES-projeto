@@ -1,6 +1,6 @@
 // FUNÇÕES DE CONTROLE DO MODAL
 // Define a função de fechar
-function closeModal() {
+function closeServiceModal() {
     const modal = document.getElementById('myModal');
     if (modal) {
         modal.style.display = 'none';
@@ -11,7 +11,7 @@ window.onclick = function(event) {
     const modal = document.getElementById('myModal');
     // Verifica se o alvo do clique é o próprio modal
     if (event.target == modal) {
-        closeModal();
+            closeServiceModal();
     }
 }
 
@@ -77,7 +77,7 @@ function loadProfissionais(servicoId) {
 }
 
 // FUNÇÃO PARA ABRIR O MODAL (CHAMADA PELO BOTÃO NO HTML)
-function openModal(serviceName, serviceId) {
+function openServiceModal(serviceName, serviceId) {
     const modal = document.getElementById('myModal');
     const serviceNameSpan = document.getElementById('selectedServiceName'); 
     const serviceIdInput = document.getElementById('modalServiceId'); 

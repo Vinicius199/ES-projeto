@@ -4,11 +4,11 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import login as django_login, authenticate, logout as django_logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from .forms import CadastroForm, ClienteUpdateForm, AgendamentoForm, ProfissionalForm, ServicoForm
 from .models import Cliente, Agendamento, Servico, Profissional
-from django.views.decorators.http import require_POST, require_http_methods # Adicionado require_http_methods
+from django.views.decorators.http import require_POST, require_http_methods 
 
 # ----------------------------------------------------
 # FUNÇÃO AUXILIAR (Se você quiser proteger o Admin)
@@ -21,7 +21,7 @@ def is_admin_or_staff(user):
 def home(request):
     return render(request, 'home.html')
 
-# Se quiser proteger esta página, use: @user_passes_test(is_admin_or_staff)
+@user_passes_test(is_admin_or_staff)
 def painel_admin(request):
     """
     Renderiza o painel de cadastro, passando as listas de Profissionais e Serviços
@@ -38,6 +38,7 @@ def painel_admin(request):
     return render(request, 'admin.html', context) 
 
 @require_POST
+@user_passes_test(is_admin_or_staff, login_url='login')
 def cadastrar_profissional(request):
     form = ProfissionalForm(request.POST) 
     
@@ -51,6 +52,7 @@ def cadastrar_profissional(request):
         return JsonResponse({'status': 'erro', 'mensagem': 'Dados inválidos.', 'erros': form.errors}, status=400)
 
 @require_POST
+@user_passes_test(is_admin_or_staff, login_url='login')
 def cadastrar_servico(request):
     
     form = ServicoForm(request.POST)
@@ -65,7 +67,7 @@ def cadastrar_servico(request):
         return JsonResponse({'status': 'erro', 'mensagem': 'Dados inválidos.', 'erros': form.errors}, status=400)
 
 @require_POST
-# @user_passes_test(is_admin_or_staff) # Proteção
+@user_passes_test(is_admin_or_staff) 
 def excluir_profissional(request, pk):
     """ Exclui um Profissional (Funcionário) e redireciona. """
     profissional = get_object_or_404(Profissional, pk=pk)
@@ -79,7 +81,7 @@ def excluir_profissional(request, pk):
     return redirect('painel_admin') 
 
 @require_POST
-# @user_passes_test(is_admin_or_staff) # Proteção
+@user_passes_test(is_admin_or_staff)
 def excluir_servico(request, pk):
     """ Exclui um Serviço e redireciona. """
     servico = get_object_or_404(Servico, pk=pk)
@@ -93,9 +95,8 @@ def excluir_servico(request, pk):
         
     return redirect('painel_admin')
 
-
 @require_http_methods(["GET", "POST"])
-# @user_passes_test(is_admin_or_staff) # Proteção
+@user_passes_test(is_admin_or_staff)
 def editar_profissional(request, pk):
     profissional = get_object_or_404(Profissional, pk=pk)
     
@@ -135,7 +136,7 @@ def editar_profissional(request, pk):
     return render(request, 'admin.html', context)
 
 @require_http_methods(["GET", "POST"])
-# @user_passes_test(is_admin_or_staff) # Proteção
+@user_passes_test(is_admin_or_staff)
 def editar_servico(request, pk):
     servico = get_object_or_404(Servico, pk=pk)
     
@@ -291,10 +292,11 @@ def get_profissionais_por_servico(request, servico_id):
 def agenda(request):
     meus_agendamentos = Agendamento.objects.filter(
         cliente=request.user
-    ).select_related('servico').order_by('data_hora')
+    ).select_related('servico', 'Profissional').order_by('data_hora')
     
     context = {
-        'agendamentos': meus_agendamentos
+        'agendamentos': meus_agendamentos,
+        'agora': timezone.now(),
     }
     return render(request, 'agenda.html', context)
 
