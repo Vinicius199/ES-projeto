@@ -10,15 +10,15 @@
     <div class="container">
         <h1>Visualização de Agendamentos</h1>
         
-        {% if messages %}
-            <div class="messages">
+        <div class="message-area">
+            {% if messages %}
                 {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    {{ message }}
-                </div>
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
                 {% endfor %}
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
         
         <div class="btn-container">
             <button id="btnMeusAgendamentos">Meus Agendamentos</button>
@@ -45,7 +45,7 @@
                             <td>{{ agendamento.data_hora|date:"d/m/Y H:i" }}</td>
                             <td>
                                 {{ agendamento.servico.nome }} com 
-                                {{ agendamento.Profissional.get_full_name }}
+                                {{ agendamento.Profissional.get_full_name }} 
                             </td>
                             <td>
                                 {% if agendamento.cancelado %}
@@ -90,7 +90,7 @@
                 <div id="professionalSelection">
                     <h3>Escolha um Profissional para ver a agenda:</h3>
                     <div id="professionalList">
-                        </div>
+                    </div>
                 </div>
 
                 <div id="scheduleDisplay" style="display: none;">
@@ -98,7 +98,7 @@
                     <p><a href="#" id="backToProfessionals"> &larr; Voltar para a lista de Profissionais</a></p>
 
                     <div class="schedule-grid" id="availableSchedules">
-                        </div>
+                    </div>
                     
                     <p style="margin-top: 20px;">
                         <a href="{% url 'service' %}" style="color: #007bff;">Agendar Novo Horário com o profissional selecionado</a>

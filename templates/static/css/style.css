@@ -10,7 +10,7 @@ body {
   color: #1e293b;
 }
 
-/* ====== NAVBAR ====== */
+/*NAVBAR */
 nav {
   width: 100%;
   background-color: #ffffff;
@@ -70,7 +70,7 @@ nav {
   border-color: #2563eb;
 }
 
-/* ====== CONTEÚDO PRINCIPAL ====== */
+/* CONTEÚDO PRINCIPAL */
 main {
   padding: 60px 32px;
   text-align: center;
@@ -92,7 +92,7 @@ main p {
   margin-top: 5px;
 }
 
-/* ====== RESPONSIVO ====== */
+/*RESPONSIVO */
 @media (max-width: 700px) {
   nav {
     flex-direction: column;
@@ -109,7 +109,34 @@ main p {
     margin-top: 10px;
   }
 }
-/* ====== ESTILOS ESPECÍFICOS DA PÁGINA DE LOGIN ====== */
+
+/* ESTILOS DE CADASTRO  */
+.cadastro-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 16px;
+  min-height: calc(100vh - 80px);
+  background: linear-gradient(180deg, #f3f6fb 0%, #e7ecf5 100%);
+}
+
+.cadastro-card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.cadastro-card h2 {
+  text-align: center;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
 
 .login-container {
   display: flex;
@@ -208,33 +235,6 @@ input:focus {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ====== ESTILOS ESPECÍFICOS DA PÁGINA DE CADASTRO ====== */
-
-.cadastro-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 60px 16px;
-  min-height: calc(100vh - 80px);
-  background: linear-gradient(180deg, #f3f6fb 0%, #e7ecf5 100%);
-}
-
-.cadastro-card {
-  width: 100%;
-  max-width: 420px;
-  background: #fff;
-  border-radius: 12px;
-  padding: 32px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e2e8f0;
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-.cadastro-card h2 {
-  text-align: center;
-  color: #1e293b;
-  margin-bottom: 8px;
-}
 
 .subtitle {
   text-align: center;

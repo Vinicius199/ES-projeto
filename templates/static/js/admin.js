@@ -1,3 +1,45 @@
+function showMessage(message, type, targetElement) {
+    const displayTime = 5000; 
+    
+    targetElement.querySelectorAll('.alert').forEach(alert => alert.remove());
+
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type}`; 
+    alertDiv.innerHTML = message.replace(/\n/g, '<br>');
+
+    targetElement.prepend(alertDiv); 
+    
+    alertDiv.addEventListener('transitionend', function() {
+        if (alertDiv.classList.contains('fade-out')) {
+            alertDiv.remove();
+        }
+    });
+
+    setTimeout(() => {
+        if (alertDiv) {
+            alertDiv.classList.add('fade-out');
+        }
+    }, displayTime);
+    
+}
+
+function handleDjangoMessages() {
+    const alerts = document.querySelectorAll('.alert'); 
+    const displayTime = 5000; 
+
+    alerts.forEach(alert => {
+        alert.addEventListener('transitionend', function() {
+            if (alert.classList.contains('fade-out')) {
+                alert.remove();
+            }
+        });
+        
+        setTimeout(() => {
+            alert.classList.add('fade-out');
+        }, displayTime);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
 
     const funcionarioModal = document.getElementById('funcionarioModal');
@@ -5,21 +47,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const viewFuncionarioModal = document.getElementById('viewFuncionarioModal');
     const viewServicoModal = document.getElementById('viewServicoModal');
 
-    // Botões de abertura
     const openFuncBtn = document.getElementById('openFuncionarioModal');
     const openServBtn = document.getElementById('openServicoModal');
     const openViewFuncionarioBtn = document.getElementById('openViewFuncionarioModal');
     const openViewServicoBtn = document.getElementById('openViewServicoModal');
     
-    // Botões de fechar (X)
     const closeBtns = document.querySelectorAll('.close-btn');
 
-    // URL base para redirecionamento (limpa os parâmetros de edição)
     const adminPainelUrl = new URL(window.location.href);
     adminPainelUrl.pathname = adminPainelUrl.pathname.replace(/funcionario\/editar\/\d+\/|servico\/editar\/\d+\//, '');
-
-
-    // --- FUNÇÕES AUXILIARES ---
 
     function getCookie(name) {
         let cookieValue = null;
@@ -46,39 +82,76 @@ document.addEventListener('DOMContentLoaded', function() {
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.style.display = "none";
-            // Se fechar no modo de edição, redireciona para limpar o estado
             if (document.body.classList.contains('editing-mode')) {
-                // Remove a classe do corpo para garantir que não tente reabrir ao voltar
                 document.body.classList.remove('editing-mode');
                 window.location.href = adminPainelUrl.toString();
             }
         }
     }
-    
-    // Função genérica para exibir mensagens no topo do container
-    function showMessage(message, type, targetElement) {
-        // Remove mensagens anteriores do mesmo tipo/target
-        targetElement.querySelectorAll('.alert').forEach(alert => alert.remove());
-
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type}`; 
+    function updateServicoSelect(profissionais) {
+        const selectServico = document.getElementById('funcionarios_servico');
+        if (!selectServico) return;
         
-        // Formata a mensagem para quebrar linhas se houver detalhes de erro
-        alertDiv.innerHTML = message.replace(/\n/g, '<br>');
-
-        targetElement.prepend(alertDiv); 
-
-        // Remove a mensagem após 5 segundos
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 5000);
+        selectServico.innerHTML = ''; // Limpa as opções antigas
+        
+        if (profissionais && profissionais.length > 0) {
+            profissionais.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = `${p.nome} ${p.sobrenome}`; 
+                selectServico.appendChild(option);
+            });
+        } else {
+             const option = document.createElement('option');
+             option.value = "";
+             option.disabled = true;
+             option.textContent = "Nenhum profissional cadastrado.";
+             selectServico.appendChild(option);
+        }
     }
 
-    // Abrir Modais de Cadastro/Visualização
+    function updateViewFuncionarioTable(profissionais) {
+        const tableBody = document.querySelector('#viewFuncionarioModal .list-table tbody');
+        if (!tableBody) return;
+        
+        tableBody.innerHTML = ''; 
+        const csrftoken = getCookie('csrftoken');
+        
+        if (profissionais && profissionais.length > 0) {
+            profissionais.forEach(p => {
+                const row = tableBody.insertRow();
+                
+                row.insertCell().textContent = p.id;
+                row.insertCell().textContent = `${p.nome} ${p.sobrenome}`;
+                row.insertCell().textContent = p.email || "N/A"; 
+                
+                const actionsCell = row.insertCell();
+                
+                const editUrl = `/admin-painel/funcionario/editar/${p.id}/`;
+                actionsCell.innerHTML += `<a href="${editUrl}" class="action-link btn-edit">✏️ Editar</a>`;
+                
+                const deleteUrl = `/admin-painel/funcionario/excluir/${p.id}/`;
+                actionsCell.innerHTML += `
+                    <form action="${deleteUrl}" method="POST" style="display:inline;">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${csrftoken}">
+                        <button type="submit" class="action-link btn-delete" onclick="return confirm('Tem certeza que deseja excluir este funcionário?');">❌ Excluir</button>
+                    </form>
+                `;
+            });
+        } else {
+            const row = tableBody.insertRow();
+            const cell = row.insertCell();
+            cell.colSpan = 4;
+            cell.textContent = "Nenhum funcionário cadastrado.";
+        }
+    }
+
+    handleDjangoMessages();
+
+
     if (openFuncBtn) openFuncBtn.addEventListener('click', () => openModal(funcionarioModal));
     if (openServBtn) openServBtn.addEventListener('click', () => openModal(servicoModal));
 
-    // Abrir Modais de Visualização
     if (openViewFuncionarioBtn) openViewFuncionarioBtn.addEventListener('click', () => openModal(viewFuncionarioModal));
     if (openViewServicoBtn) openViewServicoBtn.addEventListener('click', () => openModal(viewServicoModal));
 
@@ -91,21 +164,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Fechar ao clicar fora do modal
     window.addEventListener('click', function(event) {
         document.querySelectorAll('.modal').forEach(modal => {
             if (event.target === modal) {
-                closeModal(modal.id); // Reusa a função closeModal para tratar o redirecionamento de edição
+                closeModal(modal.id); 
             }
         });
     });
 
-    // Forçar abertura do modal se estiver no modo de edição (Renderizado pelo Django)
     if (document.body.classList.contains('editing-mode')) {
         const funcModal = document.getElementById('funcionarioModal');
         const servModal = document.getElementById('servicoModal');
-        
-        // Verifica se a classe 'modal-open' foi adicionada pelo HTML
+
         if (funcModal && funcModal.classList.contains('modal-open')) {
             openModal(funcModal);
         }
@@ -114,35 +184,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-
-    
-    // Função genérica para submissão AJAX usando Fetch
     async function handleFormSubmit(event, modalElement) {
         event.preventDefault(); 
-        
+ 
         const form = event.target;
         const submitBtn = form.querySelector('.btn-submit');
-        
-        // Otimização: Guarda o texto original do botão
+        const formId = form.id; 
+ 
         const originalBtnText = submitBtn.textContent; 
-        
+ 
         const isEditing = form.action.includes('/editar/'); 
 
         if (isEditing) {
-            // Se for edição, usamos o submit padrão do Django para lidar com formset e redirects
-            // Note que se o form de edição não usa AJAX, ele fará um POST tradicional
             form.submit();
             return; 
         }
-        
-        // AJAX (apenas para CADASTRO)
+
         const formData = new FormData(form);
-        const csrftoken = getCookie('csrftoken'); // Obtém o token do cookie
+        const csrftoken = getCookie('csrftoken'); 
 
         submitBtn.disabled = true;
         submitBtn.textContent = 'Salvando...';
 
-        // Limpa mensagens anteriores de erro no formulário
         form.querySelectorAll('.alert').forEach(alert => alert.remove());
 
         try {
@@ -155,39 +218,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // Tenta ler a resposta como JSON
             const result = await response.json();
 
             if (response.ok && (response.status === 201 || response.status === 200)) {
-                
+
                 showMessage(result.mensagem, 'success', document.querySelector('.container')); 
                 form.reset();
-                
-                // Redireciona após 1 segundo para limpar o formulário e recarregar dados (se houver)
-                setTimeout(() => {
-                    window.location.href = adminPainelUrl.toString();
-                }, 1000); 
+
+                if (formId === 'formFuncionario' && result.profissionais_list) {
+
+                    updateServicoSelect(result.profissionais_list);
+
+                    updateViewFuncionarioTable(result.profissionais_list); 
+
+                    closeModal(modalElement.id); 
+
+                } else {
+                    setTimeout(() => {
+                        window.location.href = adminPainelUrl.toString();
+                    }, 1000); 
+                }
 
             } else {
-                // Trata erros de validação (400) ou erros internos (500)
+
                 let errorMessage = result.mensagem || 'Ocorreu um erro desconhecido.';
-                
+
                 if (result.erros) {
-                    // Monta a lista de erros de validação (ex: campo: erro1, erro2)
                     let errorList = Object.entries(result.erros).map(([field, errors]) => 
                         `${field}: ${errors.join(', ')}`
                     ).join('\n');
-                    
-                    // Adiciona quebras de linha à mensagem principal
+ 
                     errorMessage += '\nDetalhes: ' + errorList;
                 }
-                
-                // Exibe a mensagem de erro no modal
+
                 showMessage(errorMessage, 'error', modalElement.querySelector('.modal-content') || form);
             }
         } catch (error) {
             console.error('Erro na submissão:', error);
-            // Exibe erro de conexão no modal
             showMessage('Erro de conexão com o servidor. Verifique o console para detalhes.', 'error', modalElement.querySelector('.modal-content') || form);
         } finally {
             submitBtn.disabled = false;
@@ -195,7 +262,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Aplica a submissão aos formulários de Cadastro
     const formFuncionario = document.getElementById('formFuncionario');
     if (formFuncionario) formFuncionario.addEventListener('submit', (e) => handleFormSubmit(e, funcionarioModal));
 

@@ -1,10 +1,31 @@
+let professionals = []; 
+let schedules = {}; 
+const API_URL = '/api/agendamentos-profissionais/';
+
+function hideAlerts() {
+    const alerts = document.querySelectorAll('.alert');
+    const displayTime = 5000; 
+    const fadeOutTime = 500; 
+
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.classList.add('fade-out');
+            
+            setTimeout(() => {
+                alert.remove();
+            }, fadeOutTime); 
+
+        }, displayTime);
+    });
+}
+
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.style.display = 'block';
-         if (modalId === 'modalProfissionais') {
-            populateProfessionalList();
-            showProfessionalSelection(); // Garante que a primeira etapa é exibida
+        if (modalId === 'modalProfissionais') {
+            fetchSchedulesAndProfessionals(); 
+            showProfessionalSelection();
         }
     }
 }
@@ -15,10 +36,6 @@ function closeModal(modalId) {
         modal.style.display = 'none';
     }
 }
-
-// ===================================
-// Lógica de Seleção de Profissional (Modal 2)
-// ===================================
 
 function showProfessionalSelection() {
     const selection = document.getElementById('professionalSelection');
@@ -32,18 +49,55 @@ function showProfessionalSelection() {
     }
 }
 
+function fetchSchedulesAndProfessionals() {
+    const list = document.getElementById('professionalList');
+    if (!list) 
+        return;
+
+    if (professionals.length > 0) {
+        populateProfessionalList();
+        return;
+    }
+    
+    list.innerHTML = '<p style="text-align: center; color: #007bff;">Carregando profissionais e agendas...</p>';
+
+    fetch(API_URL)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Erro ${response.status}: Falha na comunicação com o servidor.`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            professionals = data.professionals; 
+            schedules = data.schedules; 
+            populateProfessionalList();
+        })
+        .catch(error => {
+            console.error('Erro de Fetch:', error);
+            // Exibe o erro na área da lista de profissionais
+            list.innerHTML = `<p class="alert alert-error" style="text-align: center;">Não foi possível carregar a lista de profissionais. Detalhes: ${error.message}</p>`;
+        });
+}
+
 function populateProfessionalList() {
     const list = document.getElementById('professionalList');
-    if (!list) return; // Garante que o elemento existe
+    if (!list) return;
 
-    list.innerHTML = ''; // Limpa a lista anterior
+    list.innerHTML = ''; 
+    
+    if (professionals.length === 0) {
+        list.innerHTML = '<p>Nenhum profissional cadastrado.</p>';
+        return;
+    }
+
     professionals.forEach(prof => {
         const item = document.createElement('div');
         item.className = 'professional-item';
         item.setAttribute('data-id', prof.id);
-        item.innerHTML = `<strong>${prof.name}</strong><br><small>Especialidade: ${prof.specialization}</small>`;
+        
+        item.innerHTML = `<strong>${prof.name}</strong>`; 
 
-        // Usando addEventListener para melhor prática
         item.addEventListener('click', () => selectProfessional(prof.id, prof.name));
         list.appendChild(item);
     });
@@ -56,10 +110,7 @@ function selectProfessional(id, name) {
     const scheduleDisplay = document.getElementById('scheduleDisplay');
 
     if (professionalSelection && selectedProfName && modalProfissionaisTitle && scheduleDisplay) {
-        // Oculta a lista de profissionais
         professionalSelection.style.display = 'none';
-
-        // Atualiza o título e exibe a área de horários
         selectedProfName.textContent = `Horários de: ${name}`;
         modalProfissionaisTitle.textContent = `Agenda de ${name}`;
         scheduleDisplay.style.display = 'block';
@@ -72,32 +123,53 @@ function displaySchedules(profId) {
     const scheduleDiv = document.getElementById('availableSchedules');
     if (!scheduleDiv) return;
 
-    scheduleDiv.innerHTML = ''; // Limpa os horários anteriores
-    const profSchedules = schedules[profId] || [];
+    scheduleDiv.innerHTML = ''; 
+    const profSchedules = schedules[profId] || []; 
 
     if (profSchedules.length === 0) {
-        scheduleDiv.innerHTML = '<p style="color: red;">Nenhum horário agendado ou disponível.</p>';
+        scheduleDiv.innerHTML = '<p class="alert alert-warning" style="text-align: center;">Nenhum agendamento futuro encontrado para este profissional.</p>';
         return;
     }
+    
+    let tableHTML = `
+        <table class="list-table">
+            <thead>
+                <tr>
+                    <th>Data e Hora</th>
+                    <th>Serviço</th>
+                    <th>Cliente</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
 
     profSchedules.forEach(schedule => {
         const date = new Date(schedule.datetime);
-        // Formato: DD/MM/AAAA e HH:MM
         const dateString = date.toLocaleDateString('pt-BR');
         const timeString = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-        const item = document.createElement('div');
-        item.className = 'schedule-item';
-        item.setAttribute('data-datetime', schedule.datetime);
-        item.innerHTML = `<strong>${dateString}</strong><br>${timeString}`;
-
-        scheduleDiv.appendChild(item);
+        
+        const statusClass = schedule.status === 'Confirmado' ? 'bg-success' : 'bg-warning';
+        
+        tableHTML += `
+            <tr>
+                <td>${dateString} ${timeString}</td>
+                <td>${schedule.service_name}</td>
+                <td>${schedule.client_name}</td>
+                <td><span class="badge ${statusClass}">${schedule.status}</span></td>
+            </tr>
+        `;
     });
+    
+    tableHTML += '</tbody></table>';
+    
+    scheduleDiv.innerHTML = tableHTML;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-
-    // 1. Adiciona event listeners aos botões de abrir
+    
+    hideAlerts();
+   
     const btnMeusAgendamentos = document.getElementById('btnMeusAgendamentos');
     const btnProfissionais = document.getElementById('btnProfissionais');
     const backToProfessionals = document.getElementById('backToProfessionals');
@@ -114,7 +186,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-// 2. Adiciona event listeners aos botões de fechar (x)
     document.querySelectorAll('.close-btn').forEach(button => {
         button.addEventListener('click', function() {
             const modalId = this.getAttribute('data-modal');
@@ -122,7 +193,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 3. Adiciona evento para o link "Voltar"
     if (backToProfessionals) {
         backToProfessionals.addEventListener('click', function(e) {
             e.preventDefault();
@@ -130,14 +200,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 4. Fechar Modais ao Clicar Fora (área externa)
     window.addEventListener('click', function(event) {
         if (event.target.classList.contains('modal')) {
             event.target.style.display = "none";
         }
     });
-
 });
-
-// Adiciona o token CSRF globalmente para chamadas AJAX
-const csrfToken = "{{ csrf_token }}";
