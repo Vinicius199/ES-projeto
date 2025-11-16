@@ -3,10 +3,11 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.contrib.auth.hashers import make_password 
 
 # PADRÃO DE CRIAÇÃO: FACTORY METHOD (FÁBRICA)
-# ====================================================================
+
 # O ClienteManager atua como a Fábrica. Ele encapsula a lógica de criação 
 # e inicialização de objetos Cliente e Superuser, garantindo que o objeto 
 # retornado esteja sempre configurado corretamente (com senha hasheada).
+
 class ClienteManager(BaseUserManager):
     # FACTORY METHOD: create_user
     # Responsável por criar e retornar objetos Clientes válidos.
@@ -28,7 +29,7 @@ class ClienteManager(BaseUserManager):
         # is_active: Garante que o usuário pode logar
         extra_fields.setdefault('is_active', True) 
         
-        # Validações de segurança (Opcional, mas boas práticas)
+        # Validações de segurança
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
         if extra_fields.get('is_superuser') is not True:
@@ -37,10 +38,10 @@ class ClienteManager(BaseUserManager):
         # Agora o create_user recebe todas as flags e salva 
         return self.create_user(email, senha, **extra_fields)
 
-# ====================================================================
 # PADRÃO ESTRUTURAL: ADAPTER (ADAPTADOR)
+
 # PADRÃO COMPORTAMENTAL: TEMPLATE METHOD (MÉTODO MODELO)
-# ====================================================================
+
 # Cliente herda de AbstractBaseUser e implementa os "ganchos" exigidos
 # pelo Template Method do Django, atuando como um Adaptador para o ORM.
 class Cliente(AbstractBaseUser, PermissionsMixin):
@@ -53,11 +54,11 @@ class Cliente(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     
-    # ADAPTER: O ClienteManager (Fábrica) é adaptado para ser o 'objects' padrão 
+    # ADAPTER: O ClienteManager (Fábrica) é adaptado para ser o 'objetos' padrão 
     # que o ORM do Django espera para criar e buscar instâncias de Cliente.
     objects = ClienteManager() 
 
-    # IMPLEMENTAÇÃO DO TEMPLATE METHOD ( EXIGIDOS PELO ABSTRACTBASEUSER)
+    # Implementação do TEMPLATE METHOD (exigidos pelo AbstractBaseUser)
     
     # ADAPTER / TEMPLATE : Adaptação do Campo de Login.
     # O Template Method (AbstractBaseUser) define que deve haver um campo de login.
@@ -70,7 +71,7 @@ class Cliente(AbstractBaseUser, PermissionsMixin):
 
     # ADAPTER / TEMPLATE : Adaptação e Implementação dos Métodos de Nome.
     # O Template Method (e o Admin do Django) espera que o modelo implemente esses métodos
-    # para exibir o nome. Você ADAPTA os campos 'nome' e 'sobrenome' para essa interface.
+    # para exibir o nome. Eu ADAPTEI os campos 'nome' e 'sobrenome' para essa interface.
     def get_full_name(self):
         return f"{self.nome} {self.sobrenome}"
 
@@ -114,8 +115,12 @@ class Agendamento(models.Model):
     
     servico = models.ForeignKey(
         Servico, 
-        on_delete=models.PROTECT
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
     )
+    data_hora = models.DateTimeField()
+    cancelado = models.BooleanField(default=False)
     
     Profissional =models.ForeignKey(
         'Profissional',
@@ -125,7 +130,7 @@ class Agendamento(models.Model):
     )
 
     confirmado = models.BooleanField(
-        default=False, # Definir como False é o padrão, mas a view vai sobrescrever.
+        default=False, 
         verbose_name='Agendamento Confirmado'
     )
 

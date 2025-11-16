@@ -13,10 +13,11 @@ header {
 }
 
 .container {
-    display: flex;
-    justify-content: center;
+    display: flex !important;
+justify-content: center;
     margin-top: 30px;
     gap: 30px;
+    flex-wrap: wrap;
 }
 
 .service-box {
@@ -44,18 +45,18 @@ header {
     border: none;
     padding: 10px 20px;
     text-align: center;
-    text-decoration: none;
-    display: inline-block;
+    display: inline-block !important; 
     font-size: 16px;
     border-radius: 5px;
     cursor: pointer;
+    width: auto !important; 
+    margin: 0 !important; 
 }
 
 .button:hover {
     background-color: #45a049;
 }
 
-/* Modal Styles */
 .modalService {
     display: none;
     position: fixed;
@@ -107,4 +108,3 @@ header {
     text-decoration: none;
     cursor: pointer;
 }
-/* End of Modal Styles */

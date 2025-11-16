@@ -87,11 +87,28 @@
                 {% csrf_token %}
 
                 {% if is_editing and servico %}
-                    {# Se estiver editando, o Django form será usado #}
-                    {{ form.as_p }}
+                    {{ form.as_p }}                    
+                    <div class="form-group">
+                        <label for="funcionarios_servico_edit">Designar Funcionário(s):</label>
+                        <select id="funcionarios_servico_edit" name="profissionais" multiple>
+                            {% for profissional in profissionais_list %}
+                                <option value="{{ profissional.id }}"
+                                    {% if profissional in servico.profissionais_aptos.all %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ profissional.get_full_name }}
+                                </option>
+                            {% endfor %}
+                            
+                            <option value="" disabled>Nenhum profissional cadastrado.</option>
+                        </select>
+                        <small>Dica: Use Ctrl/Cmd para selecionar múltiplos funcionários.</small>
+                    </div>
+                    
                     <button type="submit" class="btn-submit">Salvar Alterações</button>
                 {% else %}
-                    {# Cadastro (inputs diretos) #}
+                    {# Bloco de Cadastro Novo (inputs diretos) #}
                     <div class="form-group"><label for="nome_servico">Nome do Serviço:</label><input type="text" id="nome_servico" name="nome" required /></div>
                     <div class="form-group"><label for="descricao_servico">Descrição:</label><textarea id="descricao_servico" name="descricao" required></textarea></div>
                     
@@ -103,7 +120,6 @@
 
                     <div class="form-group">
                         <label for="funcionarios_servico">Designar Funcionário(s):</label>
-                        {# 🎯 CORRIGIDO: Removido o 'required' para ser opcional #}
                         <select id="funcionarios_servico" name="profissionais" multiple>
                             {% for profissional in profissionais_list %}
                             <option value="{{ profissional.id }}">{{ profissional.nome }} {{ profissional.sobrenome }}</option>
@@ -128,7 +144,6 @@
                     <tr><th>ID</th><th>Nome</th><th>Email</th><th>Ações</th></tr>
                 </thead>
                 <tbody>
-                    {# Nota: 'funcionarios_list' ajustado para 'profissionais_list' para consistência, se necessário #}
                     {% for profissional in profissionais_list %}
                     <tr>
                         <td>{{ profissional.id }}</td>
