@@ -4,24 +4,21 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import login as django_login, authenticate, logout as django_logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from .forms import CadastroForm, ClienteUpdateForm, AgendamentoForm, ProfissionalForm, ServicoForm
 from .models import Cliente, Agendamento, Servico, Profissional
-from django.views.decorators.http import require_POST, require_http_methods # Adicionado require_http_methods
+from django.views.decorators.http import require_POST, require_http_methods 
 
-# ----------------------------------------------------
-# FUNÇÃO AUXILIAR (Se você quiser proteger o Admin)
-# ----------------------------------------------------
+# Funçao auxiliar para proteger o Admin)
 def is_admin_or_staff(user):
     """ Verifica se o usuário é ativo e tem permissões de staff/admin. """
     return user.is_authenticated and (user.is_staff or user.is_superuser)
 
-
 def home(request):
     return render(request, 'home.html')
 
-# Se quiser proteger esta página, use: @user_passes_test(is_admin_or_staff)
+@user_passes_test(is_admin_or_staff)
 def painel_admin(request):
     """
     Renderiza o painel de cadastro, passando as listas de Profissionais e Serviços
@@ -38,34 +35,76 @@ def painel_admin(request):
     return render(request, 'admin.html', context) 
 
 @require_POST
+@user_passes_test(is_admin_or_staff, login_url='login')
 def cadastrar_profissional(request):
     form = ProfissionalForm(request.POST) 
     
     if form.is_valid():
         try:
             form.save()
-            return JsonResponse({'status': 'sucesso', 'mensagem': 'Funcionário cadastrado com sucesso!'}, status=201)
+            
+            profissionais_atuais = Profissional.objects.all().order_by('nome')
+            
+            profissionais_data = [
+                {'id': p.id, 'nome': p.nome, 'sobrenome': p.sobrenome} 
+                for p in profissionais_atuais
+            ]
+
+            return JsonResponse({
+                'status': 'sucesso', 
+                'mensagem': 'Funcionário cadastrado com sucesso!', 
+                'profissionais_list': profissionais_data 
+            }, status=201)
+            
         except Exception as e:
             return JsonResponse({'status': 'erro', 'mensagem': f'Erro ao salvar: {e}'}, status=500)
     else:
         return JsonResponse({'status': 'erro', 'mensagem': 'Dados inválidos.', 'erros': form.errors}, status=400)
 
 @require_POST
+@user_passes_test(is_admin_or_staff, login_url='login')
 def cadastrar_servico(request):
     
-    form = ServicoForm(request.POST)
+    dados_post = request.POST.copy()
+    
+    if 'tempo' in dados_post:
+        try:
+            tempo_str = dados_post.get('tempo')
+            if len(tempo_str.split(':')) == 2:
+                horas, minutos = map(int, tempo_str.split(':'))
+                duracao_minutos = (horas * 60) + minutos
+                
+                dados_post['duracao_minutos'] = duracao_minutos
+                
+        except ValueError:
+            pass
+
+    form = ServicoForm(dados_post)
     
     if form.is_valid():
         try:
-            form.save() 
-            return JsonResponse({'status': 'sucesso', 'mensagem': 'Serviço cadastrado com sucesso!'}, status=201)
+            servico = form.save() 
+            
+            profissionais_ids = request.POST.getlist('profissionais')
+            
+            servico.profissionais_aptos.set(profissionais_ids) 
+            
+            return JsonResponse({
+                'status': 'sucesso', 
+                'mensagem': 'Serviço e profissionais associados cadastrados com sucesso!'
+            }, status=201)
+            
         except Exception as e:
             return JsonResponse({'status': 'erro', 'mensagem': f'Erro ao salvar serviço: {e}'}, status=500)
     else:
-        return JsonResponse({'status': 'erro', 'mensagem': 'Dados inválidos.', 'erros': form.errors}, status=400)
+        return JsonResponse({
+            'status': 'erro', 
+            'mensagem': 'Dados inválidos.', 
+            'erros': form.errors
+        }, status=400)
 
 @require_POST
-# @user_passes_test(is_admin_or_staff) # Proteção
+@user_passes_test(is_admin_or_staff) 
 def excluir_profissional(request, pk):
     """ Exclui um Profissional (Funcionário) e redireciona. """
     profissional = get_object_or_404(Profissional, pk=pk)
@@ -79,23 +118,38 @@ def excluir_profissional(request, pk):
     return redirect('painel_admin') 
 
 @require_POST
-# @user_passes_test(is_admin_or_staff) # Proteção
+@user_passes_test(is_admin_or_staff, login_url='login')
 def excluir_servico(request, pk):
-    """ Exclui um Serviço e redireciona. """
     servico = get_object_or_404(Servico, pk=pk)
+    nome_servico = servico.nome
+    
+    agendamentos_ativos = Agendamento.objects.filter(
+        servico=servico,
+        data_hora__gte=timezone.now(),  
+        cancelado=False                 
+    ).exists()
+
+    if agendamentos_ativos:
+        messages.error(
+            request, 
+            f"Não foi possível excluir o serviço '{nome_servico}'. Existem agendamentos ativos ou futuros vinculados a ele."
+        )
+        return redirect('painel_admin')
     
     try:
-        nome_servico = servico.nome
         servico.delete()
-        messages.success(request, f"Serviço '{nome_servico}' excluído com sucesso!")
+        messages.success(request, f"Serviço '{nome_servico}' excluído com sucesso! Agendamentos antigos foram mantidos no histórico.")
+        
     except Exception as e:
-        messages.error(request, f"Não foi possível excluir o serviço. Possivelmente, existem agendamentos associados. Erro: {e}")
+        messages.error(
+            request, 
+            f"Ocorreu um erro ao tentar excluir o serviço. Tente novamente ou verifique logs. Erro: {e}"
+        )
         
     return redirect('painel_admin')
 
-
 @require_http_methods(["GET", "POST"])
-# @user_passes_test(is_admin_or_staff) # Proteção
+@user_passes_test(is_admin_or_staff)
 def editar_profissional(request, pk):
     profissional = get_object_or_404(Profissional, pk=pk)
     
@@ -135,7 +189,7 @@ def editar_profissional(request, pk):
     return render(request, 'admin.html', context)
 
 @require_http_methods(["GET", "POST"])
-# @user_passes_test(is_admin_or_staff) # Proteção
+@user_passes_test(is_admin_or_staff)
 def editar_servico(request, pk):
     servico = get_object_or_404(Servico, pk=pk)
     
@@ -143,13 +197,18 @@ def editar_servico(request, pk):
         form = ServicoForm(request.POST, instance=servico) 
         
         if form.is_valid():
-            form.save()
+            servico = form.save()
+            
+            profissionais_ids = request.POST.getlist('profissionais')
+            
+            servico.profissionais_aptos.set(profissionais_ids)
+            
             messages.success(request, f"Serviço '{servico.nome}' atualizado com sucesso!")
             return redirect('painel_admin')
         else:
             messages.error(request, "Erro na validação. Verifique os campos.")
             
-    else: # GET
+    else: 
         form = ServicoForm(instance=servico)
         
     profissionais_list = Profissional.objects.all()
@@ -158,7 +217,7 @@ def editar_servico(request, pk):
         'form': form,
         'is_editing': True,
         'servico': servico,
-        'profissionais_list': profissionais_list # Para o campo M2M
+        'profissionais_list': profissionais_list 
     }
 
     return render(request, 'admin.html', context)
@@ -272,12 +331,12 @@ def service(request):
 def get_profissionais_por_servico(request, servico_id):
     try:
         servico = get_object_or_404(Servico, pk=servico_id)
-        profissionais = servico.profissionais_aptos.all().order_by('nome')
+        profissionais = servico.profissionais_aptos.all().order_by('nome') 
         
         profissionais_data = [
             {
                 'id': p.id,
-                'nome_completo': p.get_full_name() # Use o método que você definiu
+                'nome_completo': p.get_full_name() 
             }
             for p in profissionais
         ]
@@ -291,12 +350,53 @@ def get_profissionais_por_servico(request, servico_id):
 def agenda(request):
     meus_agendamentos = Agendamento.objects.filter(
         cliente=request.user
-    ).select_related('servico').order_by('data_hora')
+    ).select_related('servico', 'Profissional').order_by('data_hora')
     
     context = {
-        'agendamentos': meus_agendamentos
+        'agendamentos': meus_agendamentos,
+        'agora': timezone.now(),
     }
     return render(request, 'agenda.html', context)
+
+@login_required
+def get_professional_schedules(request):
+    professionals_data = Profissional.objects.all().values('id', 'nome', 'sobrenome')
+    
+    professionals_list = [
+        {
+            'id': prof['id'], 
+            'name': f"{prof['nome']} {prof['sobrenome']}"
+        } 
+        for prof in professionals_data
+    ]
+
+    future_schedules = Agendamento.objects.filter(
+        cancelado=False, 
+        data_hora__gte=timezone.now()
+    ).select_related('servico', 'Profissional').order_by('data_hora')
+
+    schedules_by_prof = {}
+    for agendamento in future_schedules:
+        prof_id = agendamento.Profissional.id 
+        
+        schedule_item = {
+            'datetime': agendamento.data_hora.isoformat(),
+            'service_name': agendamento.servico.nome,
+            'client_name': agendamento.cliente.get_full_name(),
+            'status': 'Confirmado' if agendamento.confirmado else 'Pendente',
+            'id': agendamento.id
+        }
+        
+        if prof_id not in schedules_by_prof:
+            schedules_by_prof[prof_id] = []
+        
+        schedules_by_prof[prof_id].append(schedule_item)
+
+    # Retorna os dados em um único JSON
+    return JsonResponse({
+        'professionals': professionals_list,
+        'schedules': schedules_by_prof
+    })
 
 @login_required
 def cancelar_agendamento(request, agendamento_id):

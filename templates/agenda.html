@@ -1,68 +1,114 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} Horario {% endblock %}
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/agenda.css' %}"> 
+{% endblock %}
 
-{% block dashboard %}
+{% block title %}Agenda - Visualização{% endblock %}
 
-<div class="container">
-    <h1>Meus Horários Agendados</h1>
+{% block dashboard %} 
+    <div class="container">
+        <h1>Visualização de Agendamentos</h1>
+        
+        <div class="message-area">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        
+        <div class="btn-container">
+            <button id="btnMeusAgendamentos">Meus Agendamentos</button>
+            <button id="btnProfissionais">Agendamentos dos Profissionais</button>
+        </div>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div id="modalMeusAgendamentos" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" data-modal="modalMeusAgendamentos">&times;</span>
+                <h2>Minha Lista de Horários Agendados</h2>
+                
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Data e Hora</th>
+                            <th>Serviço e Profissional</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for agendamento in agendamentos %}
+                        <tr>
+                            <td>{{ agendamento.data_hora|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {{ agendamento.servico.nome }} com 
+                                {{ agendamento.Profissional.get_full_name }} 
+                            </td>
+                            <td>
+                                {% if agendamento.cancelado %}
+                                    <span class="badge bg-danger">Cancelado</span>
+                                {% elif agendamento.data_hora < agora %}
+                                    <span class="badge bg-primary">feito</span>
+                                {% elif agendamento.confirmado %}
+                                    <span class="badge bg-success">Confirmado</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Pendente</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not agendamento.cancelado and agendamento.data_hora > agora %}
+                                    <form method="post" action="{% url 'cancelar_agendamento' agendamento.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-cancelar" onclick="return confirm('Tem certeza que deseja cancelar este agendamento? O cancelamento é regido pelas regras de tempo da barbearia (15 minutos de antecedência).')">
+                                            Cancelar
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-muted">–</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center;">Você não possui agendamentos.</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                </table>
+                <p style="margin-top: 20px;"><a href="{% url 'service' %}" style="color: #007bff;">Agendar Novo Horário</a></p>
             </div>
-        {% endfor %}
-    {% endif %}
-    {% if agendamentos %}
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th scope="col">Data e Hora</th>
-                <th scope="col">Serviço e Profissional</th>
-                <th scope="col">Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for agendamento in agendamentos %}
-            <tr>
-                <td>{{ agendamento.data_hora|date:"d/m/Y H:i" }}</td>
-                
-                <td>{{ agendamento.servico }} com {{ agendamento.Profissional }}</td>
-                
-                <td>
-                    {% if agendamento.cancelado %}
-                        <span class="badge bg-danger">Cancelado</span>
-                    {% elif agendamento.confirmado %}
-                        <span class="badge bg-success">Confirmado</span>
-                    {% else %}
-                    {% endif %}
-                </td>
-                <td>
-                    {% if not agendamento.cancelado %}
-                        <form method="post" 
-                              action="{% url 'cancelar_agendamento' agendamento.id %}" 
-                              style="display:inline;" 
-                              class="cancel-form">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-excluir btn-sm"
-                                        onclick="return confirm('Tem certeza que deseja cancelar este agendamento?');">
-                                Cancelar
-                            </button>
-                        </form>
-                    {% else %}
-                        
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-        <p>Você não tem horários agendados.</p>
-    {% endif %}
+        </div>
+        
+        <div id="modalProfissionais" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" data-modal="modalProfissionais">&times;</span>
+                <h2 id="modalProfissionaisTitle">Agendamentos dos Profissionais</h2>
 
-    <p><a href="{% url 'service' %}" class="btn btn-primary">Agendar Novo Horário</a></p>
-</div>
+                <div id="professionalSelection">
+                    <h3>Escolha um Profissional para ver a agenda:</h3>
+                    <div id="professionalList">
+                    </div>
+                </div>
+
+                <div id="scheduleDisplay" style="display: none;">
+                    <h3 id="selectedProfName">Horários de [Profissional]</h3>
+                    <p><a href="#" id="backToProfessionals"> &larr; Voltar para a lista de Profissionais</a></p>
+
+                    <div class="schedule-grid" id="availableSchedules">
+                    </div>
+                    
+                    <p style="margin-top: 20px;">
+                        <a href="{% url 'service' %}" style="color: #007bff;">Agendar Novo Horário com o profissional selecionado</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock dashboard %} 
+
+{% block extra_js %}
+    <script src="{% static 'js/agenda.js' %}"></script>
 {% endblock %}

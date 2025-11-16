@@ -1,6 +1,4 @@
-// FUNÇÕES DE CONTROLE DO MODAL
-// Define a função de fechar
-function closeModal() {
+function closeServiceModal() {
     const modal = document.getElementById('myModal');
     if (modal) {
         modal.style.display = 'none';
@@ -9,19 +7,16 @@ function closeModal() {
 
 window.onclick = function(event) {
     const modal = document.getElementById('myModal');
-    // Verifica se o alvo do clique é o próprio modal
     if (event.target == modal) {
-        closeModal();
+            closeServiceModal();
     }
 }
 
-// FUNÇÃO AJAX PARA CARREGAR PROFISSIONAIS
 function loadProfissionais(servicoId) {
     const selectProfissional = document.getElementById('modalProfissionalSelect');
     
-    // 🔑 NOVA LÓGICA CRÍTICA: BUSCA A URL DO DOM
     const agendamentoForm = document.getElementById('agendamentoForm');
-    const apiUrlBase = agendamentoForm ? agendamentoForm.dataset.apiUrl : null; // Pega o valor do atributo data-api-url
+    const apiUrlBase = agendamentoForm ? agendamentoForm.dataset.apiUrl : null; 
 
     if (!selectProfissional) {
         console.error("Erro: Elemento 'modalProfissionalSelect' não encontrado.");
@@ -42,14 +37,11 @@ function loadProfissionais(servicoId) {
         return;
     }
 
-    // A URL está segura e definida.
     const url = apiUrlBase.replace('0', servicoId); 
     
     fetch(url) 
         .then(response => {
         if (!response.ok) {
-            // Se a URL do AJAX estiver errada, a resposta pode ser 404 (Not Found)
-            // Se a resposta for 500, o problema está no views.py
             throw new Error('Erro na requisição AJAX: ' + response.statusText + ' (' + response.status + ')');
         }
         return response.json();
@@ -76,8 +68,7 @@ function loadProfissionais(servicoId) {
         });
 }
 
-// FUNÇÃO PARA ABRIR O MODAL (CHAMADA PELO BOTÃO NO HTML)
-function openModal(serviceName, serviceId) {
+function openServiceModal(serviceName, serviceId) {
     const modal = document.getElementById('myModal');
     const serviceNameSpan = document.getElementById('selectedServiceName'); 
     const serviceIdInput = document.getElementById('modalServiceId'); 
@@ -88,13 +79,11 @@ function openModal(serviceName, serviceId) {
         return; 
     }
 
-    // Configura os dados no modal
     if (serviceNameSpan && serviceIdInput && serviceId) {
         serviceNameSpan.textContent = serviceName;
         serviceIdInput.value = serviceId;
     }
 
-    // CHAMA O AJAX PARA CARREGAR OS PROFISSIONAIS
     loadProfissionais(serviceId);
 
     // Configura a data mínima
@@ -106,20 +95,16 @@ function openModal(serviceName, serviceId) {
         dateTimeInput.min = localISOTime;
     }
 
-    // 4. Exibe o modal
     modal.style.display = 'block'; 
 }
 
-// FUNÇÃO PARA SUBMETER O FORMULÁRIO
 function submitForm() {
-    // 1. Captura os elementos e valores
     const servicoId = document.getElementById('modalServiceId').value;
     const dataHora = document.getElementById('datetime').value;
     const profissionalSelect = document.getElementById('modalProfissionalSelect');
     const profissionalId = profissionalSelect ? profissionalSelect.value : null; 
     const form = document.getElementById('agendamentoForm');
 
-    // 2. Validação dos campos
     let isValid = true;
     let errorMessage = "";
 
@@ -134,17 +119,15 @@ function submitForm() {
     } 
     
     if (!profissionalId || profissionalSelect.selectedIndex <= 0) {
-        // Verifica se o valor é válido ou se o índice selecionado é o placeholder
         isValid = false;
         errorMessage = "Por favor, selecione um Profissional.";
     }
 
     if (!isValid) {
         alert(errorMessage);
-        return; // Para a submissão se a validação falhar
+        return; 
     }
 
-    // 3. Preenche os campos ocultos do formulário principal
     const formServicoId = document.getElementById('form_servico_id');
     const formDataHora = document.getElementById('form_data_hora');
     const formProfissionalId = document.getElementById('form_profissional_id');
@@ -159,12 +142,9 @@ function submitForm() {
         return;
     }
 
-    // 4. Submete o formulário
     if (form) {
-        console.log("Submetendo formulário..."); // Confirma que o submit foi chamado
+        console.log("Submetendo formulário...");
         form.submit();
-        // Opcional: Fechar o modal aqui, mas o ideal é que a página recarregue/redirecione após o submit
-        // closeModal(); 
     } else {
         console.error("Erro fatal: Formulário 'agendamentoForm' não encontrado.");
     }
