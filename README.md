@@ -38,3 +38,16 @@ biblioteca que vai precisar para rodar o projeto
 pip install django-allauth
 
 pip install django-cors-headers
+
+pip install python-dateutil
+
+#Para realizaçoes dos testes
+
+pip install pytest pytest-django
+
+use 
+pytest
+
+caso nao funcionar use o comando
+
+terminal powershell: "$env:DJANGO_SETTINGS_MODULE="agenda.settings"; pytest" e o pytest funciona com esse comando "na minha maquina foi a unica forma que eu consegui rodar o pytest"
