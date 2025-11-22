@@ -128,6 +128,7 @@ class Agendamento(models.Model):
         related_name='agendamentos_realizados',
         verbose_name='Profissional Agendado'
     )
+    
 
     confirmado = models.BooleanField(
         default=False, 

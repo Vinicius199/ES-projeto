@@ -21,6 +21,9 @@ urlpatterns = [
     path('service/', views.service, name='service'),
     path('agenda/', views.agenda, name='agenda'),
     path('cliente/', views.cliente, name='cliente'),
+    
+    path('agendar/', views.criar_agendamento, name='criar_agendamento'), 
+    
     path('servico/<int:servico_id>/profissionais/', views.get_profissionais_por_servico, name='profissionais_por_servico'),
     path('agenda/cancelar/<int:agendamento_id>/', views.cancelar_agendamento, name='cancelar_agendamento'),
 ]

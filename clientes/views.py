@@ -290,6 +290,7 @@ def cliente(request):
     }
     return render(request, 'cliente.html', context)
 
+
 @login_required
 def service(request):
     if request.method == 'GET':
@@ -300,33 +301,9 @@ def service(request):
             'form': form
         }
         return render(request, 'servico.html', context)
-    
-    elif request.method == 'POST':
-        form = AgendamentoForm(request.POST) 
         
-        if form.is_valid():
-            try:
-                agendamento = form.save(commit=False)
-                agendamento.cliente = request.user 
-                agendamento.confirmado = True
-                agendamento.save() 
-                
-                messages.success(request, "Agendamento realizado com sucesso! 🎉")
-                return redirect('agenda')
-
-            except Exception as e:
-                print(f"Erro ao salvar agendamento: {e}")
-                messages.error(request, "Erro interno ao processar o agendamento.")
-                return redirect('service') 
-                
-        else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{error}") 
-            
-            return redirect('service') 
-            
     return redirect('service')
+
 
 def get_profissionais_por_servico(request, servico_id):
     try:
@@ -428,3 +405,31 @@ def cancelar_agendamento(request, agendamento_id):
         messages.success(request, "Agendamento cancelado com sucesso.")
 
     return redirect('agenda')
+
+@require_POST
+@login_required
+def criar_agendamento(request):
+    
+    form = AgendamentoForm(request.POST) 
+    
+    if form.is_valid():
+        try:
+            agendamento = form.save(commit=False)
+            agendamento.cliente = request.user 
+            agendamento.confirmado = True
+            agendamento.save() 
+            
+            messages.success(request, "Agendamento realizado com sucesso! 🎉")
+            return redirect('agenda')
+
+        except Exception as e:
+            print(f"Erro ao salvar agendamento: {e}")
+            messages.error(request, f"Erro interno ao processar o agendamento. Detalhe: {e}")
+            return redirect('service') 
+            
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f"Erro no agendamento: {error}")
+        
+        return redirect('service')
