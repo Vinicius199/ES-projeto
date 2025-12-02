@@ -43,16 +43,16 @@ def is_admin_or_staff(user):
 @login_required
 def google_calendar_auth_start(request):
 
-    #relative_path = reverse('google_calendar_auth_callback')
+    relative_path = reverse('google_calendar_auth_callback')
 
-    #callback_uri = request.build_absolute_uri(relative_path)
-    callback_uri = "http://127.0.0.1:8000/"
+    callback_uri = request.build_absolute_uri(relative_path)
+    #callback_uri = "http://127.0.0.1:8000/"
 
 
     if callback_uri.startswith('https'):
         callback_uri = callback_uri.replace('https', 'http', 1)
 
-    print(f"DEBUG: URL enviada final (localhost sem porta): {callback_uri}")
+    print(f"DEBUG: URL enviada final: {callback_uri}")
 
     flow = InstalledAppFlow.from_client_secrets_file(
         CLIENT_SECRET_FILE, 
@@ -84,18 +84,27 @@ def google_calendar_auth_callback(request):
         return redirect('cliente') 
 
     try:
+        
+        authorization_response = request.build_absolute_uri()
+
         flow = InstalledAppFlow.from_client_secrets_file(
             CLIENT_SECRET_FILE, 
             scopes=SCOPES, 
-            redirect_uri=request.build_absolute_uri() # Usa a URL atual
+            redirect_uri=request.build_absolute_uri(reverse('google_calendar_auth_callback')),
+            #redirect_uri=request.build_absolute_uri() # Usa a URL atual
         )
-        flow.redirect_uri = 'http://127.0.0.1:8000/'
+        #flow.redirect_uri = 'http://127.0.0.1:8000/'
 
-        query_string = request.get_full_path()
-        authorization_response_url = f"http://127.0.0.1:8000/{query_string}"
-        flow.fetch_token(authorization_response=authorization_response_url)
+        #query_string = request.get_full_path()
+        #authorization_response_url = f"http://127.0.0.1:8000/{query_string}"
+        #flow.fetch_token(authorization_response=authorization_response_url)
         
-        flow.fetch_token(authorization_response=request.build_absolute_uri())
+        authorization_response_url = request.build_absolute_uri()
+
+        if authorization_response_url.startswith('https'):
+            authorization_response = authorization_response_url.replace('https', 'http', 1)
+        
+        flow.fetch_token(authorization_response=authorization_response)
 
         refresh_token = flow.credentials.refresh_token
         
