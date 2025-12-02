@@ -27,11 +27,37 @@ class ClienteAdmin(admin.ModelAdmin):
     search_fields = ('email', 'nome')
     list_filter = ('is_staff', 'is_superuser')
 
-@admin.register(Profissional) # <-- REGISTRO SIMPLES
+@admin.register(Profissional)
 class ProfissionalAdmin(admin.ModelAdmin):
-    # Exibir todos os campos importantes e a lista de serviços que ele pode fazer
-    list_display = ('nome', 'sobrenome', 'email', 'telefone') 
-    search_fields = ('nome', 'email')
+    list_display = (
+        'user_nome_completo', 
+        'user_email', 
+        'user_telefone', 
+        'num_servicos_aptos' 
+    ) 
     
+    search_fields = (
+        'user__nome',
+        'user__sobrenome',
+        'user__email',
+        'user__telefone',
+    )
     
     filter_horizontal = ('servicos',)
+    
+    
+    @admin.display(description='Nome Completo')
+    def user_nome_completo(self, obj):
+        return obj.user.get_full_name()
+    
+    @admin.display(description='E-mail')
+    def user_email(self, obj):
+        return obj.user.email
+        
+    @admin.display(description='Telefone')
+    def user_telefone(self, obj):
+        return obj.user.telefone
+        
+    @admin.display(description='Serviços Aptos')
+    def num_servicos_aptos(self, obj):
+        return obj.servicos.count()

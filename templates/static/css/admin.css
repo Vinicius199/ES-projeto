@@ -2,7 +2,7 @@
     position: absolute;
     top: 20px;
     right: 20px;
-    z-index: 1000; /* Garante que fique acima de outros elementos */
+    z-index: 1000; 
 }
 
 .header-links a {
@@ -20,7 +20,7 @@
     color: white;
 }
 
-/* --- ESTILOS GERAIS --- */
+/* ESTILOS GERAIS*/
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -36,7 +36,6 @@ body {
     background-color: #fff;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
-    /* Adicionado position: relative para ajudar na sobreposição do link */
     position: relative; 
 }
 
@@ -51,9 +50,9 @@ h1 {
 .action-buttons {
     display: flex;
     justify-content: center;
-    gap: 15px; /* Espaçamento ajustado */
+    gap: 15px; 
     margin-bottom: 40px;
-    flex-wrap: wrap; /* Para quebrar a linha em telas menores */
+    flex-wrap: wrap; 
 }
 
 .action-btn {
@@ -67,21 +66,20 @@ h1 {
 }
 
 .btn-funcionario {
-    background-color: #28a745; /* Verde (Cadastro Func.) */
+    background-color: #28a745; 
 }
 
 .btn-servico {
-    background-color: #ffc107; /* Amarelo (Cadastro Serv.) */
+    background-color: #ffc107; 
     color: #333;
 }
 
-/* NOVOS ESTILOS PARA BOTÕES DE VISUALIZAÇÃO */
 .btn-view-funcionario {
-    background-color: #17a2b8; /* Azul claro (Visualizar Func.) */
+    background-color: #17a2b8;
 }
 
 .btn-view-servico {
-    background-color: #6f42c1; /* Roxo (Visualizar Serv.) */
+    background-color: #6f42c1; 
 }
 
 .action-btn:hover {
@@ -115,7 +113,6 @@ textarea {
     min-height: 80px;
 }
 
-/* Para o select múltiplo, para que ele pareça uma lista */
 .form-group select[multiple] {
     height: 120px;
 }
@@ -136,23 +133,23 @@ textarea {
     background-color: #0056b3;
 }
 
-/* --- ESTILOS DO MODAL --- */
+/* MODAL*/
 .modal {
     display: none; 
     position: fixed;
-    z-index: 2000; /* Aumentado para garantir que fique acima de tudo */
+    z-index: 2000; 
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5); /* Fundo semi-transparente */
+    background-color: rgba(0, 0, 0, 0.5); 
     padding-top: 50px;
 }
 
 .modal-content {
     background-color: #fefefe;
-    margin: 5% auto; /* 5% do topo e centralizado */
+    margin: 5% auto; 
     padding: 30px;
     border: 1px solid #888;
     width: 80%;
@@ -182,7 +179,7 @@ textarea {
     to {opacity: 1; transform: translateY(0);}
 }
 
-/* --- ESTILOS PARA TABELAS DE LISTAGEM (Dentro dos modais de Visualização) --- */
+/*Estilos dentro dos modais */
 .list-table {
     width: 100%;
     border-collapse: collapse;
@@ -206,9 +203,8 @@ textarea {
     background-color: #f9f9f9; 
 }
 
-/* Estilos para os links/botões de ação na tabela */
 .action-link.btn-edit {
-    color: #27ae60; /* Verde para editar */
+    color: #27ae60; 
     text-decoration: none;
     margin-right: 8px;
     font-size: 14px;
@@ -217,7 +213,7 @@ textarea {
 }
 
 .action-link.btn-delete {
-    color: #c0392b; /* Vermelho para excluir */
+    color: #c0392b; 
     background: none;
     border: none;
     cursor: pointer;
@@ -236,7 +232,7 @@ textarea {
     color: #a93226;
 }
 
-/* --- ESTILOS PARA MENSAGENS DE FEEDBACK (Alerts) --- */
+/* Mensagens de alerta */
 
 .alert {
     padding: 10px;
@@ -248,16 +244,67 @@ textarea {
     transition: opacity 0.3s ease;
 }
 
-/* Estilo para Mensagens de SUCESSO (Status 201) */
+.alert.fade-out {
+    opacity: 0;
+}
+
 .alert-success {
     color: #155724; 
     background-color: #d4edda; 
     border-color: #c3e6cb; 
 }
 
-/* Estilo para Mensagens de ERRO (Status 400 ou 500) */
 .alert-error {
     color: #721c24; 
     background-color: #f8d7da; 
     border-color: #f5c6cb; 
+}
+
+.form-group.checkbox-group {
+    display: flex !important;
+    flex-direction: row !important; 
+    align-items: flex-start !important; 
+    gap: 15px !important;
+    margin-bottom: 20px !important;
+}
+
+.checkbox-container {
+    display: flex !important;
+    flex-direction: row-reverse !important; 
+    
+    flex-wrap: nowrap !important; 
+    align-items: center !important; 
+    
+    max-width: 60% !important; 
+    width: auto !important; 
+    flex-grow: 1 !important;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: auto !important; 
+    height: auto !important;
+    margin: 0 !important; 
+    
+    margin-left: 8px !important; 
+    
+    position: relative !important;
+    top: 0 !important; 
+    vertical-align: middle !important;
+}
+
+.checkbox-container small {
+    display: inline !important; 
+    font-size: 0.85em !important;
+    color: #666 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    white-space: nowrap; 
+}
+
+.form-group.checkbox-group label {
+    flex-basis: 30% !important; 
+    min-width: 120px !important; 
+    font-weight: bold !important;
+    text-align: right !important; 
+    align-self: center !important; 
 }

@@ -18,7 +18,24 @@
         </div>
     {% endif %}
 
-    <div class="container">
+    <div class="message-container" style="padding: 10px; margin: 10px auto; max-width: 800px;">
+        {% if user.is_authenticated %}
+            {% if not user.google_refresh_token %}
+            <div class="alert alert-info" role="alert" style="padding: 15px; margin-bottom: 10px; border-radius: 4px; color: #004085; background-color: #cce5ff; border: 1px solid #b8daff;">
+                <strong>Integração Google Agenda:</strong>
+                <p style="margin-top: 5px; margin-bottom: 15px;">Deseja receber convites automáticos no seu Google Agenda ao agendar um serviço?</p>
+                <a href="{% url 'google_calendar_auth_start' %}" class="btn btn-sm btn-outline-primary" style="text-decoration: none; padding: 6px 12px; border-radius: 4px; background-color: #007bff; color: white; border: 1px solid #007bff;">
+                    Autorizar Google Agenda
+                </a>
+            </div>
+            {% else %}
+            <div class="alert alert-success" role="alert" style="padding: 15px; margin-bottom: 10px; border-radius: 4px; color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb;">
+                ✅ O Google Agenda já está autorizado. Seus agendamentos serão enviados automaticamente.
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+        <div class="container">
         {% for servico in servicos %}
             <div class="service-box">
                 <h3>{{ servico.nome }}
@@ -77,14 +94,14 @@
         </div>
     {% endif %}
 
-    <form method="post" id="agendamentoForm" action="{% url 'service' %}" 
-    data-api-url="{% url 'profissionais_por_servico' 0 %}" style="display:none;">
+    <form method="post" id="agendamentoForm" action="{% url 'criar_agendamento' %}" 
+    data-api-url="{% url 'get_profissionais_por_servico' 0 %}" style="display:none;">
     {% csrf_token %}
-    
+
     <input type="hidden" id="form_servico_id" name="servico"> 
-    
+
     <input type="hidden" id="form_data_hora" name="data_hora">
-    
+
     <input type="hidden" id="form_profissional_id" name="Profissional"> 
 </form>
 </body>

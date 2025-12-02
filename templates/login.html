@@ -1,14 +1,13 @@
 {% extends 'baselogin.html' %}
+{% load static%}
 
 {% block title %}Início - Meu Site{% endblock %}
 
 {% block content %}
   <section class="home">
     {% block 'dashboard'%}
-      <!-- CSS principal e CSS da página de login -->
-      <link rel="stylesheet" href="templetes/static/css/style.css">
-    
-      <!-- ======= CONTEÚDO PRINCIPAL ======= -->
+        
+
       <main class="login-container">
         <div class="login-card">
           <h2>Entrar no sistema</h2>
@@ -39,11 +38,7 @@
         
         </div>
       </main>
-
-
-
-
-
+      <link rel="stylesheet" href="templetes/static/css/login.css">
       <script src="templetes/static/js/main.js"></script>
       <script>
       </script>

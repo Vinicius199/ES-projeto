@@ -1,17 +1,13 @@
-// Referências aos botões
 const btnLogin = document.getElementById('btnLogin');
 const btnCadastro = document.getElementById('btnCadastro');
 
-// Eventos de clique (simples) 
 if (btnLogin) {
     btnLogin.addEventListener('click', () => {
-        // Lógica de redirecionamento ou ação de login
     });
 }
 
 if (btnCadastro) {
     btnCadastro.addEventListener('click', () => {
-        // Lógica de redirecionamento ou ação de cadastro
     });
 }
 
@@ -35,7 +31,6 @@ function closeModal() {
     document.getElementById('myModal').style.display = 'none';
 }
 
-// Funções de toggle/erro (MANTIDAS, embora pareçam ser para outra parte da aplicação)
 function toggleEditMode() {
     const viewMode = document.getElementById('view-mode');
     const editMode = document.getElementById('edit-mode');
@@ -50,7 +45,6 @@ function toggleEditMode() {
 }
     
 document.addEventListener('DOMContentLoaded', function() {
-    // Fecha o modal ao clicar fora dele
     window.onclick = function(event) {
         var modal = document.getElementById('myModal');
         if (event.target == modal) {
@@ -58,7 +52,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Se houver erros de formulário no POST, garantimos que o modo de edição permaneça visível (MANTIDO)
     const formHasErrors = document.querySelector('.errorlist, .alert-danger'); 
     if (formHasErrors) {
         const viewMode = document.getElementById('view-mode');

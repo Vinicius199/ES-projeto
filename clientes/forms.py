@@ -1,5 +1,5 @@
 from django.core.exceptions import ValidationError
-import re
+import re 
 from django import forms
 from django.db.models import Q
 from datetime import timedelta, time
@@ -72,7 +72,7 @@ class ClienteUpdateForm(forms.ModelForm):
     class Meta:
         model = Cliente
         # Inclua apenas os campos que você quer permitir que o cliente edite
-        fields = ['nome', 'sobrenome', 'email', 'telefone'] 
+        fields = ['nome', 'sobrenome', 'email', 'telefone','is_staff'] 
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
             'sobrenome': forms.TextInput(attrs={'class': 'form-control'}),
@@ -148,16 +148,39 @@ class AgendamentoForm(forms.ModelForm):
                 )
                         
         return cleaned_data
-    
+
 class ProfissionalForm(forms.ModelForm):
+
+    nome = forms.CharField(label='Nome', max_length=25)
+    sobrenome = forms.CharField(label='Sobrenome', max_length=25)
+    email = forms.EmailField(label='Email', max_length=100)
+    telefone = forms.CharField(label='Telefone', max_length=15)
+
     class Meta:
         model = Profissional
-        fields = ['nome', 'sobrenome', 'email', 'telefone'] 
+        fields = [] 
         
-        widgets = {
-            'telefone': forms.TextInput(attrs={'placeholder': '(XX) XXXXX-XXXX'}),
-        }
-        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields['nome'].initial = self.instance.user.nome
+            self.fields['sobrenome'].initial = self.instance.user.sobrenome
+            self.fields['email'].initial = self.instance.user.email
+            self.fields['telefone'].initial = self.instance.user.telefone
+    
+    def save(self, commit=True):
+        profissional = super().save(commit=False)
+        user = profissional.user
+        user.nome = self.cleaned_data['nome']
+        user.sobrenome = self.cleaned_data['sobrenome']
+        user.email = self.cleaned_data['email']
+        user.telefone = self.cleaned_data['telefone']
+       
+        if commit:
+            user.save()
+            profissional.save()
+        return profissional
+
     def clean_telefone(self):
         telefone = self.cleaned_data.get('telefone')
         telefone_limpo = re.sub(r'\D', '', telefone)
@@ -204,4 +227,32 @@ class ServicoForm(forms.ModelForm):
             cleaned_data['duracao_minutos'] = total_minutos
                 
         return cleaned_data
-        
+
+class CadastroProfissionalAdminForm(forms.Form):
+    nome = forms.CharField(label='Nome', max_length=25)
+    sobrenome = forms.CharField(label='Sobrenome', max_length=25)
+    email = forms.EmailField(label='Email', max_length=100)
+    telefone = forms.CharField(label='Telefone', max_length=15)
+    senha = forms.CharField(label='Senha', widget=forms.PasswordInput)
+    
+    # Validação do E-mail
+    def clean_email(self):
+        email = self.cleaned_data.get('email').lower()
+        if Cliente.objects.filter(email=email).exists():
+            raise forms.ValidationError("Este e-mail já está cadastrado como cliente ou funcionário.")
+        return email
+
+    def clean_telefone(self):
+        telefone = self.cleaned_data.get('telefone')
+        telefone_limpo = re.sub(r'\D', '', telefone)
+        if len(telefone_limpo) < 10 or len(telefone_limpo) > 11:
+             raise ValidationError("O número de telefone deve ter 10 ou 11 dígitos, incluindo o DDD.")
+        return telefone_limpo
+    
+class ProfissionalCadastroForm(forms.Form):
+    email = forms.EmailField(required=True)
+    nome = forms.CharField(max_length=25, required=True)
+    sobrenome = forms.CharField(max_length=25, required=True)
+    senha = forms.CharField(widget=forms.PasswordInput, required=True)
+    telefone = forms.CharField(max_length=15, required=False) 
+    # servicos = forms.ModelMultipleChoiceField(queryset=Servico.objects.all(), required=False)
