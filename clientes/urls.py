@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/funcionarios/com_login', views.cadastrar_profissional, name='api_cadastrar_profissional_com_login'),
     path('api/servicos', views.cadastrar_servico, name='api_cadastrar_servico'),
     path('api/agendamentos-profissionais/', views.get_professional_schedules, name='api_schedules'),
+    path('excluir-conta/', views.excluir_conta, name='excluir_conta'),
 
     path('admin-painel/funcionario/editar/<int:pk>/', views.editar_profissional, name='editar_funcionario'),
     path('admin-painel/funcionario/excluir/<int:pk>/', views.excluir_profissional, name='excluir_funcionario'),

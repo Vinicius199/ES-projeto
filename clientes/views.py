@@ -749,3 +749,21 @@ def criar_agendamento(request):
         
         return redirect('service')
 
+
+@login_required
+def excluir_conta(request):
+    if request.method == 'POST':
+        user = request.user
+        # Faz o logout do usuário antes de deletá-lo
+        from django.contrib.auth import logout
+        logout(request)
+
+        # Deleta o usuário
+        user.delete()
+
+        messages.success(request, "Sua conta foi excluída com sucesso. Sentiremos sua falta!")
+        # Redireciona para a página inicial (ou login)
+        return redirect('home')  # Use o nome da sua página inicial
+
+    # Se alguém tentar acessar via GET, redirecione.
+    return redirect('cliente')
