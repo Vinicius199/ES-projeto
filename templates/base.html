@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>{% block title %}Agenda{% endblock %}</title>
+
+    {% load static %}
+
+    <link rel="stylesheet" href="{% static 'css/servico.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/agenda.css' %}" />
+
+    {% block extra_head %}{% endblock extra_head %}
+  </head>
+  <body>
+    <nav>
+      <div class="logo">Agenda</div>
+
+      <div class="menu">
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'cliente' %}">Cliente</a>
+        <a href="{% url 'service' %}">Serviço</a>
+        <a href="{% url 'agenda' %}">Agenda</a>
+      </div>
+
+      <div class="buttons">
+        {% if user.is_authenticated %} {# USUÁRIO LOGADO #}
+
+        <span class="user-name" style="margin-right: 15px">
+          Olá, <strong>
+            {{ user.nome }} 
+            {{user.sobrenome}}
+          </strong>
+        </span>
+
+        <button id="btnLogout">
+          <a href="{% url 'logout_view' %}" class="btn">Sair</a> 
+        </button>
+
+        {% else %} {# USUÁRIO DESLOGADO #}
+
+        <button id="btnLogin">
+          <a href="{% url 'login' %}" class="btn">Login</a>
+        </button>
+        <button id="btnCadastro">
+          <a href="{% url 'cadastro' %}" class="btn">Cadastro</a>
+        </button>
+
+        {% endif %}
+      </div>
+    </nav>
+
+    <main>{% block dashboard %} {% endblock dashboard %}</main>
+
+    <script src="{% static 'js/servico.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/agenda.js' %}"></script>
+  </body>
+</html>
