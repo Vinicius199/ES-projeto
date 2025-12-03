@@ -1,6 +1,6 @@
 # Atividade padrão de projeto
 
-padrões q eu estou ultilizando nesse projeto são:
+# padrões q eu estou ultilizando nesse projeto são:
 
 padrão criacional o Factory Method padrão estrutual o Adapter tambem conhecido como Wrapper padrão comportamental o Template Method Cada um dos padroes estao comentado em como eu ultilizei na funcionalidade que implementei e tbm ultilizei para me basear nos padroes o site refactoring guri e o arquivo que foi implementado os padroes eh no "models.py"
 
