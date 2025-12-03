@@ -32,7 +32,7 @@ Antes de tudo verifique se o python esta instaldo
 
 no CMD digite o comando python --vesion
 
-crie um ambiente virtual na sua maquina evita conflito de versão
+# crie um ambiente virtual na sua maquina evita conflito de versão
 
 No CMD rode
 
