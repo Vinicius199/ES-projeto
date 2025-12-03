@@ -11,19 +11,19 @@ from django.contrib.auth.hashers import make_password
 class ClienteManager(BaseUserManager):
     # FACTORY METHOD: create_user
     # Responsável por criar e retornar objetos Clientes válidos.
-    def create_user(self, email, senha=None, **extra_fields):
+    def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError('O e-mail deve ser fornecido')
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
-        user.set_password(senha)
+        user.set_password(password)
         # Salva o objeto Cliente no banco de dados (retorna o objeto pronto)
         user.save(using=self._db)
         return user
     
     # create_superuser
     # Variação da Fábrica que define configurações específicas (is_staff, is_superuser).
-    def create_superuser(self, email, senha=None, **extra_fields):
+    def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         # is_active: Garante que o usuário pode logar
@@ -36,7 +36,7 @@ class ClienteManager(BaseUserManager):
             raise ValueError('Superuser must have is_superuser=True.')
             
         # Agora o create_user recebe todas as flags e salva 
-        return self.create_user(email, senha, **extra_fields)
+        return self.create_user(email, password, **extra_fields)
 
 # PADRÃO ESTRUTURAL: ADAPTER (ADAPTADOR)
 
@@ -50,6 +50,10 @@ class Cliente(AbstractBaseUser, PermissionsMixin):
     sobrenome = models.CharField(max_length=25)
     email = models.EmailField(unique=True) 
     telefone = models.CharField(max_length=15, null=False)
+
+    #google auth
+    google_refresh_token = models.CharField(max_length=255, blank=True, null=True)
+    google_token_expiry = models.DateTimeField(blank=True, null=True)
     
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -82,17 +86,19 @@ class Cliente(AbstractBaseUser, PermissionsMixin):
         return f"{self.nome} {self.sobrenome} - {self.email}"
 
 class Profissional(models.Model):
-    nome = models.CharField(max_length=100)
-    sobrenome = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
-    telefone = models.CharField(max_length=15, blank=True)
     
+    user = models.OneToOneField(
+        Cliente,
+        on_delete=models.CASCADE,
+        related_name='perfil_profissional',
+    )
+
     # Um profissional pode fazer vários serviços e um serviço pode ter vários profissionais.
     servicos = models.ManyToManyField('Servico', related_name='profissionais_aptos', blank=True ) 
     
     
     def get_full_name(self):
-        return f"{self.nome} {self.sobrenome}"
+        return f"{self.user.nome} {self.user.sobrenome}"
 
     def __str__(self):
         return self.get_full_name()
@@ -141,6 +147,14 @@ class Agendamento(models.Model):
     )
 
     data_hora = models.DateTimeField()
+
+    #Id do Google Calendar
+    google_calendar_id = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True,
+        verbose_name='ID do Evento no Google Calendar'
+    )
     
     class Meta:
         ordering = ['data_hora']

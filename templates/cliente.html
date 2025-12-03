@@ -10,21 +10,26 @@
 
     {% include 'messages.html' %} <div class="box-cliente">
         
+
         <div id="view-mode" style="display: block;">
             {% if user.is_authenticated %}
                 <p><strong>Nome:</strong> {{ user.get_full_name|default:user.email }}</p>
                 <p><strong>Email:</strong> {{ user.email|default:"Email não informado" }}</p>
                 <p><strong>Telefone:</strong> {{ user.telefone|default:"(XX) XXXXX-XXXX" }}</p>
 
-                <div class="mt-4">
+                <div class="mt-4 d-flex justify-content-between">
                     <button type="button" class="btn btn-cadastro" onclick="toggleEditMode()">Editar Dados</button>
-                    <button type="button" class="btn btn-excluir">Excluir Conta</button>
+
+                    <form method="post" action="{% url 'excluir_conta' %}" onsubmit="return confirm('Tem certeza que deseja EXCLUIR sua conta? Esta ação é IRREVERSÍVEL.');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-excluir">Excluir Conta</button>
+                    </form>
                 </div>
+        
             {% else %}
-                <p>Usuário não autenticado. Por favor, <a href="{% url 'login' %}">faça o login</a>.</p>
+                        <p>Usuário não autenticado. Por favor, <a href="{% url 'login' %}">faça o login</a>.</p>
             {% endif %}
         </div>
-
 
         <div id="edit-mode" style="display: none;">
             

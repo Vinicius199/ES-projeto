@@ -50,7 +50,7 @@
             <h2>👤 {% if is_editing and profissional %}Editar Funcionário: {{ profissional.get_full_name }}{% else %}Cadastro de Funcionário{% endif %}</h2>
             
             <form id="formFuncionario" 
-                action="{% if is_editing and profissional %}{% url 'editar_funcionario' profissional.pk %}{% else %}{% url 'api_cadastrar_profissional' %}{% endif %}" 
+                action="{% if is_editing and profissional %}{% url 'editar_funcionario' profissional.pk %}{% else %}{% url 'api_cadastrar_profissional_com_login' %}{% endif %}" 
                 method="POST">
                 
                 {% csrf_token %}
@@ -60,11 +60,19 @@
                     {{ form.as_p }}
                     <button type="submit" class="btn-submit">Salvar Alterações</button>
                 {% else %}
-                    {# Cadastro (inputs diretos) #}
                     <div class="form-group"><label for="nome_func">Nome:</label><input type="text" id="nome_func" name="nome" required /></div>
                     <div class="form-group"><label for="sobrenome_func">Sobrenome:</label><input type="text" id="sobrenome_func" name="sobrenome" required /></div>
                     <div class="form-group"><label for="email_func">Email:</label><input type="email" id="email_func" name="email" required /></div>
                     <div class="form-group"><label for="telefone_func">Telefone:</label><input type="text" id="telefone_func" name="telefone" placeholder="(XX) XXXXX-XXXX" required/></div>
+                    <div class="form-group"><label for="senha_func">Senha:</label><input type="password" id="senha_func" name="senha" required /></div>
+
+                    <div class="form-group checkbox-group">
+                        <label for="is_staff_func">Tornar Administrador:</label>
+                        <div class="checkbox-container"> 
+                            <input type="checkbox" id="is_staff_func" name="is_staff" />
+                            <small>Marque para dar acesso ao painel administrativo.</small>
+                        </div>
+                    </div>
                     <button type="submit" class="btn-submit">Salvar Funcionário</button>
                 {% endif %}
 
@@ -122,7 +130,7 @@
                         <label for="funcionarios_servico">Designar Funcionário(s):</label>
                         <select id="funcionarios_servico" name="profissionais" multiple>
                             {% for profissional in profissionais_list %}
-                            <option value="{{ profissional.id }}">{{ profissional.nome }} {{ profissional.sobrenome }}</option>
+                            <option value="{{ profissional.id }}">{{ profissional.user.nome }} {{ profissional.user.sobrenome }}</option>
                             {% empty %}
                             <option value="" disabled>Nenhum profissional cadastrado.</option>
                             {% endfor %}
@@ -147,8 +155,8 @@
                     {% for profissional in profissionais_list %}
                     <tr>
                         <td>{{ profissional.id }}</td>
-                        <td>{{ profissional.nome }} {{ profissional.sobrenome }}</td>
-                        <td>{{ profissional.email }}</td>
+                        <td>{{ profissional.user.nome }} {{ profissional.user.sobrenome }}</td>
+                        <td>{{ profissional.user.email }}</td>
                         <td>
                             <a href="{% url 'editar_funcionario' profissional.id %}" class="action-link btn-edit">✏️ Editar</a>
                             <form action="{% url 'excluir_funcionario' profissional.id %}" method="POST" style="display:inline;">

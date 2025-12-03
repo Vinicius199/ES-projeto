@@ -18,6 +18,7 @@ def agendamento_existente(existing_client, servico_test, cria_um_profissional_te
         Profissional=cria_um_profissional_test,
 
     )
+
 @pytest.mark.django_db
 def test_cria_agendamento_com_sucesso(client, agendamento_url, agendamento_valido_data, existing_client, cria_um_profissional_test):
     
@@ -25,8 +26,10 @@ def test_cria_agendamento_com_sucesso(client, agendamento_url, agendamento_valid
     assert Agendamento.objects.count() == 0
     
     agendamento_valido_data['Profissional'] = cria_um_profissional_test.pk
-    if'profissional' in agendamento_valido_data:
-        del agendamento_valido_data['profissional']
+    
+    if 'cliente' in agendamento_valido_data:
+        del agendamento_valido_data['cliente'] 
+        
 
     response = client.post(agendamento_url, agendamento_valido_data, follow=True)
     if Agendamento.objects.count() == 0:
@@ -35,8 +38,7 @@ def test_cria_agendamento_com_sucesso(client, agendamento_url, agendamento_valid
     
     assert Agendamento.objects.count() == 1
     assert response.status_code == 200 
-    assert response.redirect_chain[-1][0] == '/agenda/' 
-
+    assert response.redirect_chain[-1][0] == '/agenda/'
 
 @pytest.mark.django_db
 def test_falha_por_conflito_de_horario(client, agendamento_url, agendamento_valido_data, agendamento_existente):

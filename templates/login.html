@@ -1,12 +1,12 @@
 {% extends 'baselogin.html' %}
+{% load static%}
 
 {% block title %}Início - Meu Site{% endblock %}
 
 {% block content %}
   <section class="home">
     {% block 'dashboard'%}
-      <link rel="stylesheet" href="templetes/static/css/login.css">
-    
+        
 
       <main class="login-container">
         <div class="login-card">
@@ -38,11 +38,7 @@
         
         </div>
       </main>
-
-
-
-
-
+      <link rel="stylesheet" href="templetes/static/css/login.css">
       <script src="templetes/static/js/main.js"></script>
       <script>
       </script>
