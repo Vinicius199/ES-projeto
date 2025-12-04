@@ -1,3 +1,5 @@
+# ES-Projeto
+
 # Atividade padrão de projeto
 
 # padrões q eu estou ultilizando nesse projeto são:
@@ -73,3 +75,4 @@ use pytest
 caso nao funcionar use o comando
 
 terminal powershell: "$env:DJANGO_SETTINGS_MODULE="agenda.settings"; pytest" e o pytest funciona com esse comando "na minha maquina foi a unica forma que eu consegui rodar o pytest"
+
