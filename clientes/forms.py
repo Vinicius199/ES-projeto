@@ -85,20 +85,33 @@ class AgendamentoForm(forms.ModelForm):
         model = Agendamento
         fields = ['Profissional', 'servico', 'data_hora'] 
         
+    def clean_data_hora(self): # Validação para garantir que a data e hora sejam futuras
+        
+        data_hora = self.cleaned_data.get('data_hora')
+        
+        agora = timezone.now()
+        
+        if data_hora and data_hora <= agora:
+            raise forms.ValidationError(
+                "Não é possível agendar um serviço para um horário que já passou. Por favor, escolha um horário futuro."
+            )
+            
+        return data_hora
+        
     def clean(self):
         cleaned_data = super().clean()
         
-        #Obtem dados do formulário
+        # Obtém dados do formulário
         profissional = cleaned_data.get('Profissional')
         servico = cleaned_data.get('servico')
         data_hora_inicio = cleaned_data.get('data_hora')
         
-        # Se algum campo essencial não foi preenchido (erro de campo obrigatório), 
-        # a validação de conflito deve ser ignorada para evitar exceptions
+        # Se algum campo essencial não foi preenchido (erro de campo obrigatório ou erro em clean_data_hora), 
+        # a validação de conflito deve ser ignorada para evitar exceptions.
         if not all([profissional, servico, data_hora_inicio]):
             return cleaned_data 
         
-        #Calcular o tempo de término do NOVO agendamento
+        # Calcular o tempo de término do NOVO agendamento
         try:
             # Obtém a duração do Servico
             duracao = servico.duracao_minutos 
@@ -106,26 +119,19 @@ class AgendamentoForm(forms.ModelForm):
             raise forms.ValidationError("Erro interno: O Serviço selecionado não possui o campo 'duracao_minutos'.")
             
         data_hora_fim_novo = data_hora_inicio + timedelta(minutes=duracao)
-                
-        # O conflito acontece quando dois intervalos de tempo [A, B] e [C, D] se sobrepõem.
-        # Condição de sobreposição: A < D AND C < B
         
-        # Aqui: A = Início do Existente; B = Fim do Existente;
-        #       C = data_hora_inicio (Novo); D = data_hora_fim_novo (Novo)
-        
-        #Agendamentos existentes que começam ANTES do novo agendamento TERMINAR.
+        # Agendamentos existentes que começam ANTES do novo agendamento TERMINAR.
         conflitos_potenciais = Agendamento.objects.filter(
             Profissional=profissional,
             cancelado=False,
             # (A < D) - O Existente começa antes do Novo terminar
             data_hora__lt=data_hora_fim_novo, 
-            
         ).exclude(
             # Exclui o próprio agendamento se for uma edição
             pk=self.instance.pk if self.instance else None 
         )
 
-        #Verifica se o AGENDAMENTO EXISTENTE TERMINA DEPOIS do NOVO COMEÇAR.
+        # Verifica se o AGENDAMENTO EXISTENTE TERMINA DEPOIS do NOVO COMEÇAR.
         for agendamento_existente in conflitos_potenciais:
             
             # Pega a duração do serviço do agendamento existente
@@ -133,7 +139,7 @@ class AgendamentoForm(forms.ModelForm):
             data_hora_fim_existente = agendamento_existente.data_hora + timedelta(minutes=duracao_existente)
             
             # (C < B) - O Novo começa antes do Existente terminar.
-            # Se as duas condições (Filtro 1 e Filtro 2) forem verdadeiras, há sobreposição.
+            # Se as duas condições forem verdadeiras, há sobreposição.
             if data_hora_inicio < data_hora_fim_existente:
                 
                 inicio_local = timezone.localtime(agendamento_existente.data_hora) 
@@ -142,7 +148,6 @@ class AgendamentoForm(forms.ModelForm):
                 # Conflito encontrado!
                 raise forms.ValidationError(
                     f"Conflito de horário! O profissional {profissional} estará ocupado das "
-                    # Usa o objeto datetime convertido para formatar a hora
                     f"{inicio_local.strftime('%H:%M')} às "
                     f"{fim_local.strftime('%H:%M')}."
                 )
